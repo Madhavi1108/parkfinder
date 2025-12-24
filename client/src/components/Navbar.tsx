@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "../context/AuthContext"; // ✅ Auth context import करें
+import { useAuth } from "../context/AuthContext";
 
 const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuth(); // ✅ Auth context से user और logout लें
+  const { user, logout } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -21,15 +22,18 @@ const Navbar: React.FC = () => {
     { name: "Home", path: "/" },
     { name: "Parking Slots", path: "/parkingslots" },
     { name: "Bookings", path: "/bookings" },
+    ...(user?.role === "admin"
+      ? [{ name: "Admin Panel", path: "/admin-panel" }]
+      : []),
   ];
 
   const isActive = (path: string) => location.pathname === path;
 
-  // ✅ Handle logout
   const handleLogout = () => {
     logout();
     navigate("/login");
     setIsMobileMenuOpen(false);
+    setIsDropdownOpen(false);
   };
 
   return (
@@ -48,7 +52,7 @@ const Navbar: React.FC = () => {
             <Link to="/" className="flex items-center space-x-3 group">
               <div className="relative">
                 <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-linear-to-br from-[#1B42CB] to-[#FF2F6C] flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <span className="text-lg md:text-xl">🚗</span>
+                  <span className="text-lg md:text-xl">S</span>
                 </div>
                 <div className="absolute -inset-1 bg-linear-to-r from-[#1B42CB] to-[#FF2F6C] rounded-xl blur opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
               </div>
@@ -84,48 +88,78 @@ const Navbar: React.FC = () => {
               ))}
             </div>
 
-            {/* Right Side Actions - Updated based on auth */}
+            {/* Right Side Actions */}
             <div className="hidden md:flex items-center space-x-4">
-              {/* ✅ Admin Button - Only show for admin users */}
-              {user?.role === "admin" && (
-                <button
-                  onClick={() => navigate("/admin-panel")}
-                  className="px-4 py-2 rounded-xl bg-linear-to-br from-[#1B42CB] to-[#FF2F6C] text-white flex items-center justify-center hover:shadow-lg hover:shadow-[#FF2F6C]/20 transition-all duration-300 cursor-pointer"
-                >
-                  Admin Panel
-                </button>
-              )}
-
-              {/* ✅ User Status/Login/Signup Button */}
               {user ? (
-                <div className="flex items-center space-x-4">
-                  {/* User Profile */}
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 rounded-full bg-linear-to-br from-[#1B42CB] to-[#FF2F6C] flex items-center justify-center">
-                      <span className="text-white font-medium">
-                        {user.name?.charAt(0).toUpperCase() || "U"}
+                // User dropdown
+                <div className="relative">
+                  <button
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    className="flex items-center space-x-3 px-4 py-2 rounded-xl bg-[#191919] border border-[#1B42CB]/30 hover:bg-[#1B42CB]/10 transition-all duration-300 cursor-pointer"
+                  >
+                    <div className=" flex items-center justify-center">
+                      <span className="text-white font-medium text-sm">
+                        {user.name?.toUpperCase() || "USER"}
                       </span>
                     </div>
-                    <div className="text-right">
-                      <div className="text-sm font-medium text-[#EEECF6]">
-                        {user.name}
-                      </div>
-                      <div className="text-xs text-[#EEECF6]/60">
-                        {user.role === "admin" ? "Administrator" : "User"}
-                      </div>
-                    </div>
-                  </div>
 
-                  {/* Logout Button */}
-                  <button
-                    onClick={handleLogout}
-                    className="px-4 py-2 rounded-xl bg-[#191919] border border-[#FF2F6C]/30 text-[#FF2F6C] flex items-center justify-center hover:bg-[#FF2F6C]/10 transition-all duration-300 cursor-pointer"
-                  >
-                    Logout
+                    <svg
+                      className={`w-4 h-4 text-[#EEECF6]/70 transition-transform duration-300 ${
+                        isDropdownOpen ? "rotate-180" : ""
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
                   </button>
+
+                  {/* Dropdown Menu */}
+                  {isDropdownOpen && (
+                    <>
+                      <div
+                        className="fixed inset-0"
+                        onClick={() => setIsDropdownOpen(false)}
+                      ></div>
+                      <div className="absolute right-0 mt-2 w-48 rounded-xl backdrop-blur-xl bg-[#191919]/95 border border-[#1B42CB]/30 shadow-lg overflow-hidden z-50">
+                        <div className="px-4 py-3 border-b border-[#1B42CB]/20">
+                          <div className="text-sm font-medium text-[#EEECF6]">
+                            {user.name}
+                          </div>
+                          <div className="text-xs text-[#EEECF6]/60">
+                            {user.role === "admin" ? "Administrator" : "USER"}
+                          </div>
+                        </div>
+                        <button
+                          onClick={handleLogout}
+                          className="w-full flex items-center justify-between px-4 py-3 text-sm text-[#FF2F6C] hover:bg-[#FF2F6C]/10 transition-all duration-300"
+                        >
+                          <span>Logout</span>
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               ) : (
-                // Show Login/Signup when not logged in
                 <>
                   <button
                     onClick={() => navigate("/login")}
@@ -181,7 +215,7 @@ const Navbar: React.FC = () => {
           </div>
         </div>
 
-        {/* Mobile Menu - Updated based on auth */}
+        {/* Mobile Menu */}
         {isMobileMenuOpen && (
           <div className="md:hidden backdrop-blur-xl bg-[#191919]/95 border-t border-[#1B42CB]/20">
             <div className="px-4 pt-2 pb-4 space-y-1">
@@ -199,10 +233,9 @@ const Navbar: React.FC = () => {
                   {item.name}
                 </Link>
               ))}
-              
+
               <div className="pt-4 border-t border-[#1B42CB]/20">
                 {user ? (
-                  // ✅ Mobile menu when user is logged in
                   <>
                     {/* User Info */}
                     <div className="flex items-center space-x-3 px-4 py-3 mb-3">
@@ -221,19 +254,6 @@ const Navbar: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Admin Button - Only for admin */}
-                    {user.role === "admin" && (
-                      <button
-                        onClick={() => {
-                          navigate("/admin-panel");
-                          setIsMobileMenuOpen(false);
-                        }}
-                        className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-xl bg-linear-to-r from-[#1B42CB] to-[#FF2F6C] text-white font-medium hover:shadow-lg hover:shadow-[#FF2F6C]/20 transition-all duration-300 mb-2"
-                      >
-                        <span>Admin Panel</span>
-                      </button>
-                    )}
-
                     {/* Logout Button */}
                     <button
                       onClick={handleLogout}
@@ -243,7 +263,7 @@ const Navbar: React.FC = () => {
                     </button>
                   </>
                 ) : (
-                  // ✅ Mobile menu when user is NOT logged in
+                  // Mobile menu when user is NOT logged in
                   <>
                     <button
                       onClick={() => {
