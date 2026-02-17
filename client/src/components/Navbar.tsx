@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import * as Icons from "lucide-react";
 
 const Navbar: React.FC = () => {
   const navigate = useNavigate();
@@ -9,6 +10,20 @@ const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+
+  // Detect system theme
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: light)');
+    setTheme(mediaQuery.matches ? 'light' : 'dark');
+
+    const handler = (e: MediaQueryListEvent) => {
+      setTheme(e.matches ? 'light' : 'dark');
+    };
+    
+    mediaQuery.addEventListener('change', handler);
+    return () => mediaQuery.removeEventListener('change', handler);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -18,13 +33,56 @@ const Navbar: React.FC = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Theme-based classes
+  const getThemeClasses = () => {
+    return theme === 'light' 
+      ? {
+          bg: 'bg-white',
+          bgSecondary: 'bg-gray-50',
+          text: 'text-gray-900',
+          textSecondary: 'text-gray-600',
+          border: 'border-gray-200',
+          cardBg: 'bg-white',
+          cardBorder: 'border-gray-200',
+          overlay: 'bg-black/5',
+          gradient: {
+            primary: 'from-blue-600 to-blue-500',
+            secondary: 'from-pink-600 to-pink-500',
+            accent: 'from-blue-600 to-pink-600'
+          },
+          navBg: isScrolled 
+            ? 'bg-white/90 backdrop-blur-xl border-b border-gray-200' 
+            : 'bg-white/70 backdrop-blur-lg'
+        }
+      : {
+          bg: 'bg-[#191919]',
+          bgSecondary: 'bg-[#0f0f0f]',
+          text: 'text-[#EEECF6]',
+          textSecondary: 'text-[#EEECF6]/70',
+          border: 'border-[#1B42CB]/20',
+          cardBg: 'bg-[#191919]/40',
+          cardBorder: 'border-[#1B42CB]/20',
+          overlay: 'bg-black/40',
+          gradient: {
+            primary: 'from-[#1B42CB] to-[#1B42CB]/80',
+            secondary: 'from-[#FF2F6C] to-[#FF2F6C]/80',
+            accent: 'from-[#1B42CB] to-[#FF2F6C]'
+          },
+          navBg: isScrolled
+            ? 'backdrop-blur-xl bg-[#191919]/90 border-b border-[#1B42CB]/20'
+            : 'backdrop-blur-lg bg-[#191919]/70'
+        };
+  };
+
+  const themeClasses = getThemeClasses();
+
   const navItems = [
-    { name: "Home", path: "/" },
-    { name: "Dashboard", path: "/dashboard" },
-    { name: "Parking Slots", path: "/parkingslots" },
-    { name: "Bookings", path: "/bookings" },
+    { name: "Home", path: "/", icon: Icons.Home },
+    { name: "Dashboard", path: "/dashboard", icon: Icons.LayoutDashboard },
+    { name: "Parking Slots", path: "/parkingslots", icon: Icons.MapPin },
+    { name: "Bookings", path: "/bookings", icon: Icons.Calendar },
     ...(user?.role === "admin"
-      ? [{ name: "Admin Panel", path: "/admin-panel" }]
+      ? [{ name: "Admin Panel", path: "/admin-panel", icon: Icons.Shield }]
       : []),
   ];
 
@@ -41,11 +99,11 @@ const Navbar: React.FC = () => {
     <>
       {/* Navbar */}
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 bg-linear-to-br from-[#191919] via-[#0f0f0f] to-[#191919] ${
-          isScrolled
-            ? "backdrop-blur-xl bg-[#191919]/90 border-b border-[#1B42CB]/20"
-            : "backdrop-blur-lg bg-[#191919]/70"
-        }`}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 bg-gradient-to-br ${
+          theme === 'light' 
+            ? 'from-gray-50 via-white to-gray-50' 
+            : 'from-[#191919] via-[#0f0f0f] to-[#191919]'
+        } ${themeClasses.navBg}`}
       >
         <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 md:h-20">
@@ -56,37 +114,41 @@ const Navbar: React.FC = () => {
                 alt="SmartPark"
                 className="h-11 md:h-15 w-auto object-contain transition-all duration-300 group-hover:scale-110"
                 style={{
-                  filter:
-                    "brightness(0) invert(1) drop-shadow(0 0 8px rgba(27,66,203,0.5))",
+                  filter: theme === 'light'
+                    ? "drop-shadow(0 0 8px rgba(27,66,203,0.3))"
+                    : "brightness(0) invert(1) drop-shadow(0 0 8px rgba(27,66,203,0.5))",
                 }}
               />
-
-              {/* Glow Effect - image ke peeche */}
-              <div className="absolute inset-0 bg-linear-to-r from-[#1B42CB] to-[#FF2F6C] rounded-full blur-2xl opacity-0 group-hover:opacity-60 transition-opacity duration-300 -z-10"></div>
+              {/* Glow Effect */}
+              <div className={`absolute inset-0 bg-gradient-to-r ${themeClasses.gradient.accent} rounded-full blur-2xl opacity-0 group-hover:opacity-60 transition-opacity duration-300 -z-10`}></div>
             </Link>
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-1">
-              {navItems.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.path}
-                  className={`relative px-6 py-3 rounded-xl font-medium transition-all duration-300 group ${
-                    isActive(item.path)
-                      ? "bg-linear-to-r from-[#1B42CB]/20 to-[#FF2F6C]/20 text-[#EEECF6]"
-                      : "text-[#EEECF6]/70 hover:text-[#EEECF6] hover:bg-[#1B42CB]/10"
-                  }`}
-                >
-                  <span className="relative z-10">{item.name}</span>
-                  {isActive(item.path) && (
-                    <div className="absolute inset-0 border border-[#1B42CB]/30 rounded-xl"></div>
-                  )}
-                  {!isActive(item.path) && (
-                    <div className="absolute inset-0 border border-transparent group-hover:border-[#1B42CB]/20 rounded-xl transition-all duration-300"></div>
-                  )}
-                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-linear-to-r from-[#1B42CB] to-[#FF2F6C] group-hover:w-3/4 transition-all duration-300"></div>
-                </Link>
-              ))}
+              {navItems.map((item) => {
+                const IconComponent = item.icon;
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.path}
+                    className={`relative px-6 py-3 rounded-xl font-medium transition-all duration-300 group flex items-center gap-2 ${
+                      isActive(item.path)
+                        ? `bg-gradient-to-r from-[#1B42CB]/20 to-[#FF2F6C]/20 ${themeClasses.text}`
+                        : `${themeClasses.textSecondary} hover:${themeClasses.text} hover:bg-[#1B42CB]/10`
+                    }`}
+                  >
+                    <IconComponent className="w-4 h-4" />
+                    <span className="relative z-10">{item.name}</span>
+                    {isActive(item.path) && (
+                      <div className={`absolute inset-0 border ${themeClasses.border} rounded-xl`}></div>
+                    )}
+                    {!isActive(item.path) && (
+                      <div className="absolute inset-0 border border-transparent group-hover:border-[#1B42CB]/20 rounded-xl transition-all duration-300"></div>
+                    )}
+                    <div className={`absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-gradient-to-r ${themeClasses.gradient.accent} group-hover:w-3/4 transition-all duration-300`}></div>
+                  </Link>
+                );
+              })}
             </div>
 
             {/* Right Side Actions */}
@@ -96,29 +158,24 @@ const Navbar: React.FC = () => {
                 <div className="relative">
                   <button
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className="flex items-center space-x-3 px-4 py-2 rounded-xl bg-[#191919] border border-[#1B42CB]/30 hover:bg-[#1B42CB]/10 transition-all duration-300 cursor-pointer"
+                    className={`flex items-center space-x-3 px-4 py-2 rounded-xl ${
+                      theme === 'light' 
+                        ? 'bg-gray-100 border-gray-200 hover:bg-gray-200' 
+                        : 'bg-[#191919] border-[#1B42CB]/30 hover:bg-[#1B42CB]/10'
+                    } border transition-all duration-300 cursor-pointer`}
                   >
-                    <div className=" flex items-center justify-center">
-                      <span className="text-white font-medium text-sm">
+                    <div className="flex items-center justify-center gap-2">
+                      <Icons.User className={`w-4 h-4 ${themeClasses.textSecondary}`} />
+                      <span className={`font-medium text-sm ${themeClasses.text}`}>
                         {user.name?.toUpperCase() || "USER"}
                       </span>
                     </div>
 
-                    <svg
-                      className={`w-4 h-4 text-[#EEECF6]/70 transition-transform duration-300 ${
+                    <Icons.ChevronDown 
+                      className={`w-4 h-4 ${themeClasses.textSecondary} transition-transform duration-300 ${
                         isDropdownOpen ? "rotate-180" : ""
-                      }`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
+                      }`} 
+                    />
                   </button>
 
                   {/* Dropdown Menu */}
@@ -128,33 +185,25 @@ const Navbar: React.FC = () => {
                         className="fixed inset-0"
                         onClick={() => setIsDropdownOpen(false)}
                       ></div>
-                      <div className="absolute right-0 mt-2 w-48 rounded-xl backdrop-blur-xl bg-[#191919]/95 border border-[#1B42CB]/30 shadow-lg overflow-hidden z-50">
-                        <div className="px-4 py-3 border-b border-[#1B42CB]/20">
-                          <div className="text-sm font-medium text-[#EEECF6]">
+                      <div className={`absolute right-0 mt-2 w-48 rounded-xl backdrop-blur-xl ${
+                        theme === 'light' 
+                          ? 'bg-white/95 border-gray-200' 
+                          : 'bg-[#191919]/95 border-[#1B42CB]/30'
+                      } border shadow-lg overflow-hidden z-50`}>
+                        <div className={`px-4 py-3 border-b ${themeClasses.border}`}>
+                          <div className={`text-sm font-medium ${themeClasses.text}`}>
                             {user.name}
                           </div>
-                          <div className="text-xs text-[#EEECF6]/60">
-                            {user.role === "admin" ? "Administrator" : "USER"}
+                          <div className={`text-xs ${themeClasses.textSecondary}`}>
+                            {user.role === "admin" ? "Administrator" : "User"}
                           </div>
                         </div>
                         <button
                           onClick={handleLogout}
-                          className="w-full flex items-center justify-between px-4 py-3 text-sm text-[#FF2F6C] hover:bg-[#FF2F6C]/10 transition-all duration-300"
+                          className={`w-full flex items-center justify-between px-4 py-3 text-sm text-[#FF2F6C] hover:bg-[#FF2F6C]/10 transition-all duration-300`}
                         >
                           <span>Logout</span>
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                            />
-                          </svg>
+                          <Icons.LogOut className="w-4 h-4" />
                         </button>
                       </div>
                     </>
@@ -164,15 +213,21 @@ const Navbar: React.FC = () => {
                 <>
                   <button
                     onClick={() => navigate("/login")}
-                    className="px-4 py-2 rounded-xl bg-[#191919] border border-[#1B42CB]/30 text-[#EEECF6] flex items-center justify-center hover:bg-[#1B42CB]/10 transition-all duration-300 cursor-pointer"
+                    className={`px-4 py-2 rounded-xl ${
+                      theme === 'light'
+                        ? 'bg-gray-100 border-gray-200 text-gray-700 hover:bg-gray-200'
+                        : 'bg-[#191919] border-[#1B42CB]/30 text-[#EEECF6] hover:bg-[#1B42CB]/10'
+                    } border flex items-center justify-center gap-2 transition-all duration-300 cursor-pointer`}
                   >
-                    Login
+                    <Icons.LogIn className="w-4 h-4" />
+                    <span>Login</span>
                   </button>
                   <button
                     onClick={() => navigate("/signup")}
-                    className="px-4 py-2 rounded-xl bg-linear-to-br from-[#1B42CB] to-[#FF2F6C] text-white flex items-center justify-center hover:shadow-lg hover:shadow-[#FF2F6C]/20 transition-all duration-300 cursor-pointer"
+                    className={`px-4 py-2 rounded-xl bg-gradient-to-br ${themeClasses.gradient.accent} text-white flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-[#FF2F6C]/20 transition-all duration-300 cursor-pointer`}
                   >
-                    Sign Up
+                    <Icons.UserPlus className="w-4 h-4" />
+                    <span>Sign Up</span>
                   </button>
                 </>
               )}
@@ -181,36 +236,16 @@ const Navbar: React.FC = () => {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden w-10 h-10 rounded-xl bg-[#191919] border border-[#1B42CB]/30 flex items-center justify-center text-[#EEECF6]"
+              className={`md:hidden w-10 h-10 rounded-xl ${
+                theme === 'light'
+                  ? 'bg-gray-100 border-gray-200'
+                  : 'bg-[#191919] border-[#1B42CB]/30'
+              } border flex items-center justify-center ${themeClasses.text}`}
             >
               {isMobileMenuOpen ? (
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
+                <Icons.X className="w-6 h-6" />
               ) : (
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                </svg>
+                <Icons.Menu className="w-6 h-6" />
               )}
             </button>
           </div>
@@ -218,38 +253,46 @@ const Navbar: React.FC = () => {
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden backdrop-blur-xl bg-[#191919]/95 border-t border-[#1B42CB]/20">
+          <div className={`md:hidden backdrop-blur-xl ${
+            theme === 'light'
+              ? 'bg-white/95 border-gray-200'
+              : 'bg-[#191919]/95 border-[#1B42CB]/20'
+          } border-t`}>
             <div className="px-4 pt-2 pb-4 space-y-1">
-              {navItems.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.path}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={`block px-4 py-3 rounded-xl font-medium transition-all duration-300 ${
-                    isActive(item.path)
-                      ? "bg-linear-to-r from-[#1B42CB]/20 to-[#FF2F6C]/20 text-[#EEECF6]"
-                      : "text-[#EEECF6]/70 hover:text-[#EEECF6] hover:bg-[#1B42CB]/10"
-                  }`}
-                >
-                  {item.name}
-                </Link>
-              ))}
+              {navItems.map((item) => {
+                const IconComponent = item.icon;
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.path}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 ${
+                      isActive(item.path)
+                        ? `bg-gradient-to-r from-[#1B42CB]/20 to-[#FF2F6C]/20 ${themeClasses.text}`
+                        : `${themeClasses.textSecondary} hover:${themeClasses.text} hover:bg-[#1B42CB]/10`
+                    }`}
+                  >
+                    <IconComponent className="w-5 h-5" />
+                    <span>{item.name}</span>
+                  </Link>
+                );
+              })}
 
-              <div className="pt-4 border-t border-[#1B42CB]/20">
+              <div className={`pt-4 border-t ${themeClasses.border}`}>
                 {user ? (
                   <>
                     {/* User Info */}
                     <div className="flex items-center space-x-3 px-4 py-3 mb-3">
-                      <div className="w-10 h-10 rounded-full bg-linear-to-br from-[#1B42CB] to-[#FF2F6C] flex items-center justify-center">
+                      <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${themeClasses.gradient.accent} flex items-center justify-center`}>
                         <span className="text-white font-medium">
                           {user.name?.charAt(0).toUpperCase() || "U"}
                         </span>
                       </div>
                       <div>
-                        <div className="font-medium text-[#EEECF6]">
+                        <div className={`font-medium ${themeClasses.text}`}>
                           {user.name}
                         </div>
-                        <div className="text-xs text-[#EEECF6]/60">
+                        <div className={`text-xs ${themeClasses.textSecondary}`}>
                           {user.role === "admin" ? "Administrator" : "User"}
                         </div>
                       </div>
@@ -258,8 +301,13 @@ const Navbar: React.FC = () => {
                     {/* Logout Button */}
                     <button
                       onClick={handleLogout}
-                      className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-xl bg-[#191919] border border-[#FF2F6C]/30 text-[#FF2F6C] font-medium hover:bg-[#FF2F6C]/10 transition-all duration-300"
+                      className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl ${
+                        theme === 'light'
+                          ? 'bg-gray-100 border-gray-200'
+                          : 'bg-[#191919] border-[#FF2F6C]/30'
+                      } border text-[#FF2F6C] font-medium hover:bg-[#FF2F6C]/10 transition-all duration-300`}
                     >
+                      <Icons.LogOut className="w-4 h-4" />
                       <span>Logout</span>
                     </button>
                   </>
@@ -271,8 +319,13 @@ const Navbar: React.FC = () => {
                         navigate("/login");
                         setIsMobileMenuOpen(false);
                       }}
-                      className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-xl bg-[#191919] border border-[#1B42CB]/30 text-[#EEECF6] font-medium hover:bg-[#1B42CB]/10 transition-all duration-300 mb-2"
+                      className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl ${
+                        theme === 'light'
+                          ? 'bg-gray-100 border-gray-200 text-gray-700'
+                          : 'bg-[#191919] border-[#1B42CB]/30 text-[#EEECF6]'
+                      } border font-medium hover:bg-[#1B42CB]/10 transition-all duration-300 mb-2`}
                     >
+                      <Icons.LogIn className="w-4 h-4" />
                       <span>Login</span>
                     </button>
                     <button
@@ -280,8 +333,9 @@ const Navbar: React.FC = () => {
                         navigate("/signup");
                         setIsMobileMenuOpen(false);
                       }}
-                      className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-xl bg-linear-to-r from-[#1B42CB] to-[#FF2F6C] text-white font-medium hover:shadow-lg hover:shadow-[#FF2F6C]/20 transition-all duration-300"
+                      className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r ${themeClasses.gradient.accent} text-white font-medium hover:shadow-lg hover:shadow-[#FF2F6C]/20 transition-all duration-300`}
                     >
+                      <Icons.UserPlus className="w-4 h-4" />
                       <span>Sign Up</span>
                     </button>
                   </>

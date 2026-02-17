@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { MapPin, Navigation, List, Map } from "lucide-react";
+import * as Icons from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 interface ParkingSlot {
@@ -37,6 +37,7 @@ const mockCoordinates = [
 
 const ParkingSlotPage: React.FC = () => {
   const navigate = useNavigate();
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const [parkingSlots, setParkingSlots] = useState<ParkingSlot[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -56,6 +57,72 @@ const ParkingSlotPage: React.FC = () => {
   const [duration, setDuration] = useState(1);
   const { token, user } = useAuth();
   const API = import.meta.env.VITE_API_URL;
+
+  // Detect system theme
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: light)');
+    setTheme(mediaQuery.matches ? 'light' : 'dark');
+
+    const handler = (e: MediaQueryListEvent) => {
+      setTheme(e.matches ? 'light' : 'dark');
+    };
+    
+    mediaQuery.addEventListener('change', handler);
+    return () => mediaQuery.removeEventListener('change', handler);
+  }, []);
+
+  // Theme-based classes
+  const getThemeClasses = () => {
+    return theme === 'light' 
+      ? {
+          bg: 'bg-gray-50',
+          text: 'text-gray-900',
+          textSecondary: 'text-gray-600',
+          textMuted: 'text-gray-500',
+          border: 'border-gray-200',
+          cardBg: 'bg-white',
+          cardBgSecondary: 'bg-gray-100',
+          cardBorder: 'border-gray-200',
+          overlay: 'bg-black/5',
+          hover: 'hover:bg-gray-100',
+          gradient: {
+            primary: 'from-blue-600 to-blue-500',
+            secondary: 'from-pink-600 to-pink-500',
+            accent: 'from-blue-600 to-pink-600'
+          },
+          status: {
+            available: 'bg-green-100 text-green-700 border-green-200',
+            occupied: 'bg-red-100 text-red-700 border-red-200',
+            maintenance: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+            default: 'bg-gray-100 text-gray-700 border-gray-200'
+          }
+        }
+      : {
+          bg: 'bg-[#191919]',
+          text: 'text-[#EEECF6]',
+          textSecondary: 'text-[#EEECF6]/70',
+          textMuted: 'text-[#EEECF6]/50',
+          border: 'border-[#1B42CB]/20',
+          cardBg: 'bg-[#191919]/60',
+          cardBgSecondary: 'bg-[#191919]/80',
+          cardBorder: 'border-[#1B42CB]/20',
+          overlay: 'bg-black/40',
+          hover: 'hover:bg-[#1B42CB]/10',
+          gradient: {
+            primary: 'from-[#1B42CB] to-[#1B42CB]/80',
+            secondary: 'from-[#FF2F6C] to-[#FF2F6C]/80',
+            accent: 'from-[#1B42CB] to-[#FF2F6C]'
+          },
+          status: {
+            available: 'bg-green-500/20 text-green-300 border-green-500/30',
+            occupied: 'bg-red-500/20 text-red-300 border-red-500/30',
+            maintenance: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
+            default: 'bg-gray-500/20 text-gray-300 border-gray-500/30'
+          }
+        };
+  };
+
+  const themeClasses = getThemeClasses();
 
   // Function to fetch parking slots
   const fetchParkingSlots = async () => {
@@ -131,13 +198,13 @@ const ParkingSlotPage: React.FC = () => {
       : `${distance.toFixed(1)} km`;
   };
 
-  //  Get directions URL
+  // Get directions URL
   const getDirectionsUrl = (slot: ParkingSlot) => {
     if (!slot.coordinates) return "#";
     return `https://www.google.com/maps/dir/?api=1&destination=${slot.coordinates.lat},${slot.coordinates.lng}`;
   };
 
-  //  Handle booking button click - Show modal
+  // Handle booking button click - Show modal
   const handleBookNow = (slot: ParkingSlot) => {
     if (!token || !user) {
       alert("Please login to book a parking slot");
@@ -153,7 +220,7 @@ const ParkingSlotPage: React.FC = () => {
     document.getElementById("booking-modal")?.classList.add("flex");
   };
 
-  //  Handle actual booking after payment
+  // Handle actual booking after payment
   const handleConfirmBooking = async () => {
     if (!selectedSlot || !token) return;
 
@@ -168,7 +235,7 @@ const ParkingSlotPage: React.FC = () => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          parkingId: selectedSlot._id, //  String ID
+          parkingId: selectedSlot._id,
           duration: duration,
           totalPrice: totalPrice,
         }),
@@ -177,7 +244,7 @@ const ParkingSlotPage: React.FC = () => {
       const data = await res.json();
 
       if (data.success) {
-        alert(" Booking successful!");
+        alert("Booking successful!");
         // Close modal
         closeModal();
 
@@ -191,11 +258,11 @@ const ParkingSlotPage: React.FC = () => {
       }
     } catch (err) {
       console.error("Booking error:", err);
-      alert("❌ Failed to book slot. Please try again.");
+      alert("Failed to book slot. Please try again.");
     }
   };
 
-  //  Handle duration change
+  // Handle duration change
   const handleDurationChange = (hours: number) => {
     setDuration(hours);
     if (selectedSlot) {
@@ -203,7 +270,7 @@ const ParkingSlotPage: React.FC = () => {
     }
   };
 
-  //  Close modal function
+  // Close modal function
   const closeModal = () => {
     document.getElementById("booking-modal")?.classList.add("hidden");
     document.getElementById("booking-modal")?.classList.remove("flex");
@@ -213,13 +280,13 @@ const ParkingSlotPage: React.FC = () => {
   const getStatusColor = (status: string): string => {
     switch (status?.toLowerCase()) {
       case "available":
-        return "bg-green-500/20 text-green-300 border-l-4 border-green-500";
+        return themeClasses.status.available;
       case "occupied":
-        return "bg-red-500/20 text-red-300 border-l-4 border-red-500";
+        return themeClasses.status.occupied;
       case "maintenance":
-        return "bg-yellow-500/20 text-yellow-300 border-l-4 border-yellow-500";
+        return themeClasses.status.maintenance;
       default:
-        return "bg-gray-500/20 text-gray-300 border-l-4 border-gray-500";
+        return themeClasses.status.default;
     }
   };
 
@@ -314,18 +381,18 @@ const ParkingSlotPage: React.FC = () => {
     return filtered;
   }, [parkingSlots, searchTerm, statusFilter, sortBy, userLocation]);
 
-  //  Render Map View
+  // Render Map View
   const renderMapView = () => {
     if (!userLocation) {
       return (
-        <div className="backdrop-blur-xl bg-[#191919]/60 border border-[#1B42CB]/20 rounded-2xl p-12 text-center">
-          <div className="w-24 h-24 bg-linear-to-br from-[#1B42CB]/20 to-[#FF2F6C]/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-[#1B42CB]/30">
-            <Map className="w-12 h-12 text-[#1B42CB]" />
+        <div className={`backdrop-blur-xl ${themeClasses.cardBg} ${themeClasses.cardBorder} border rounded-2xl p-12 text-center`}>
+          <div className={`w-24 h-24 bg-gradient-to-br ${themeClasses.gradient.accent}/20 rounded-full flex items-center justify-center mx-auto mb-6 border ${themeClasses.border}`}>
+            <Icons.MapPin className={`w-12 h-12 ${themeClasses.text}`} />
           </div>
-          <h3 className="text-2xl font-bold text-[#EEECF6] mb-3">
+          <h3 className={`text-2xl font-bold ${themeClasses.text} mb-3`}>
             Loading Map...
           </h3>
-          <p className="text-[#EEECF6]/60 mb-6">
+          <p className={`${themeClasses.textSecondary} mb-6`}>
             Fetching your location to show nearby parking slots
           </p>
         </div>
@@ -335,11 +402,11 @@ const ParkingSlotPage: React.FC = () => {
     return (
       <div className="space-y-6">
         {/* Map Container */}
-        <div className="backdrop-blur-xl bg-[#191919]/60 border border-[#1B42CB]/20 rounded-2xl overflow-hidden shadow-xl">
+        <div className={`backdrop-blur-xl ${themeClasses.cardBg} ${themeClasses.cardBorder} border rounded-2xl overflow-hidden shadow-xl`}>
           <div className="h-[500px] relative">
             {/* Mock Map Background */}
             <div
-              className="absolute inset-0 bg-linear-to-br from-[#1B42CB]/20 to-[#FF2F6C]/20"
+              className="absolute inset-0 bg-gradient-to-br from-[#1B42CB]/20 to-[#FF2F6C]/20"
               style={{
                 backgroundImage: `
                   radial-gradient(circle at 20% 30%, #1B42CB 2px, transparent 2px),
@@ -357,7 +424,7 @@ const ParkingSlotPage: React.FC = () => {
                   top: "50%",
                 }}
               >
-                <div className="w-full h-full rounded-full bg-linear-to-br from-blue-500 to-cyan-400 border-2 border-white shadow-lg animate-pulse"></div>
+                <div className="w-full h-full rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 border-2 border-white shadow-lg animate-pulse"></div>
                 <div className="absolute inset-0 rounded-full bg-blue-400 animate-ping opacity-30"></div>
               </div>
 
@@ -388,10 +455,10 @@ const ParkingSlotPage: React.FC = () => {
                       w-full h-full rounded-full flex items-center justify-center
                       ${
                         slot.status === "available"
-                          ? "bg-linear-to-br from-green-500 to-emerald-400"
+                          ? "bg-gradient-to-br from-green-500 to-emerald-400"
                           : slot.status === "occupied"
-                          ? "bg-linear-to-br from-red-500 to-pink-400"
-                          : "bg-linear-to-br from-yellow-500 to-orange-400"
+                          ? "bg-gradient-to-br from-red-500 to-pink-400"
+                          : "bg-gradient-to-br from-yellow-500 to-orange-400"
                       }
                       border-2 border-white shadow-lg
                     `}
@@ -402,15 +469,15 @@ const ParkingSlotPage: React.FC = () => {
                     </div>
                     {selectedMapSlot?._id === slot._id && (
                       <div className="absolute -top-12 left-1/2 transform -translate-x-1/2">
-                        <div className="bg-[#191919] border border-[#1B42CB]/30 rounded-xl p-3 shadow-xl min-w-[200px]">
-                          <div className="font-bold text-[#EEECF6] text-sm mb-1">
+                        <div className={`${themeClasses.cardBgSecondary} ${themeClasses.cardBorder} border rounded-xl p-3 shadow-xl min-w-[200px]`}>
+                          <div className={`font-bold ${themeClasses.text} text-sm mb-1`}>
                             {slot.name}
                           </div>
-                          <div className="text-xs text-[#EEECF6]/60 mb-2">
+                          <div className={`text-xs ${themeClasses.textSecondary} mb-2`}>
                             {slot.location}
                           </div>
                           <div className="flex justify-between items-center">
-                            <span className="text-[#EEECF6] font-bold">
+                            <span className={`${themeClasses.text} font-bold`}>
                               ₹{slot.pricePerHour}
                             </span>
                             <span
@@ -433,23 +500,23 @@ const ParkingSlotPage: React.FC = () => {
               })}
 
               {/* Map Legend */}
-              <div className="absolute bottom-4 right-4 backdrop-blur-xl bg-[#191919]/80 border border-[#1B42CB]/30 rounded-xl p-4">
+              <div className={`absolute bottom-4 right-4 backdrop-blur-xl ${themeClasses.cardBgSecondary} ${themeClasses.cardBorder} border rounded-xl p-4`}>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-full bg-linear-to-br from-green-500 to-emerald-400"></div>
-                    <span className="text-xs text-[#EEECF6]">Available</span>
+                    <div className="w-4 h-4 rounded-full bg-gradient-to-br from-green-500 to-emerald-400"></div>
+                    <span className={`text-xs ${themeClasses.text}`}>Available</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-full bg-linear-to-br from-red-500 to-pink-400"></div>
-                    <span className="text-xs text-[#EEECF6]">Occupied</span>
+                    <div className="w-4 h-4 rounded-full bg-gradient-to-br from-red-500 to-pink-400"></div>
+                    <span className={`text-xs ${themeClasses.text}`}>Occupied</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-full bg-linear-to-br from-yellow-500 to-orange-400"></div>
-                    <span className="text-xs text-[#EEECF6]">Maintenance</span>
+                    <div className="w-4 h-4 rounded-full bg-gradient-to-br from-yellow-500 to-orange-400"></div>
+                    <span className={`text-xs ${themeClasses.text}`}>Maintenance</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-full bg-linear-to-br from-blue-500 to-cyan-400"></div>
-                    <span className="text-xs text-[#EEECF6]">
+                    <div className="w-4 h-4 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400"></div>
+                    <span className={`text-xs ${themeClasses.text}`}>
                       Your Location
                     </span>
                   </div>
@@ -461,44 +528,44 @@ const ParkingSlotPage: React.FC = () => {
 
         {/* Selected Slot Details */}
         {selectedMapSlot && (
-          <div className="backdrop-blur-xl bg-[#191919]/60 border border-[#1B42CB]/20 rounded-2xl p-6 shadow-xl">
+          <div className={`backdrop-blur-xl ${themeClasses.cardBg} ${themeClasses.cardBorder} border rounded-2xl p-6 shadow-xl`}>
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="text-xl font-bold text-[#EEECF6]">
+                <h3 className={`text-xl font-bold ${themeClasses.text}`}>
                   {selectedMapSlot.name}
                 </h3>
-                <p className="text-[#EEECF6]/60">{selectedMapSlot.location}</p>
+                <p className={themeClasses.textSecondary}>{selectedMapSlot.location}</p>
               </div>
               <button
                 onClick={() => setSelectedMapSlot(null)}
-                className="w-8 h-8 rounded-lg bg-[#191919] border border-[#1B42CB]/30 flex items-center justify-center text-[#EEECF6] hover:bg-[#FF2F6C]/10 transition-colors"
+                className={`w-8 h-8 rounded-lg ${themeClasses.cardBgSecondary} border ${themeClasses.border} flex items-center justify-center ${themeClasses.text} ${themeClasses.hover} transition-colors`}
               >
-                ×
+                <Icons.X className="w-4 h-4" />
               </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div className="p-4 bg-[#191919]/50 rounded-xl">
-                <div className="text-sm text-[#EEECF6]/60 mb-1">Price</div>
-                <div className="text-2xl font-bold text-[#EEECF6]">
+              <div className={`p-4 ${themeClasses.cardBgSecondary} rounded-xl`}>
+                <div className={`text-sm ${themeClasses.textSecondary} mb-1`}>Price</div>
+                <div className={`text-2xl font-bold ${themeClasses.text}`}>
                   ₹{selectedMapSlot.pricePerHour}
-                  <span className="text-sm text-[#EEECF6]/60">/hour</span>
+                  <span className={`text-sm ${themeClasses.textSecondary}`}>/hour</span>
                 </div>
               </div>
-              <div className="p-4 bg-[#191919]/50 rounded-xl">
-                <div className="text-sm text-[#EEECF6]/60 mb-1">
+              <div className={`p-4 ${themeClasses.cardBgSecondary} rounded-xl`}>
+                <div className={`text-sm ${themeClasses.textSecondary} mb-1`}>
                   Availability
                 </div>
-                <div className="text-2xl font-bold text-[#EEECF6]">
+                <div className={`text-2xl font-bold ${themeClasses.text}`}>
                   {selectedMapSlot.availableSlots}
-                  <span className="text-sm text-[#EEECF6]/60">
+                  <span className={`text-sm ${themeClasses.textSecondary}`}>
                     /{selectedMapSlot.capacity} slots
                   </span>
                 </div>
               </div>
-              <div className="p-4 bg-[#191919]/50 rounded-xl">
-                <div className="text-sm text-[#EEECF6]/60 mb-1">Distance</div>
-                <div className="text-2xl font-bold text-[#EEECF6]">
+              <div className={`p-4 ${themeClasses.cardBgSecondary} rounded-xl`}>
+                <div className={`text-sm ${themeClasses.textSecondary} mb-1`}>Distance</div>
+                <div className={`text-2xl font-bold ${themeClasses.text}`}>
                   {userLocation && selectedMapSlot.coordinates
                     ? calculateDistance(
                         userLocation.lat,
@@ -516,9 +583,9 @@ const ParkingSlotPage: React.FC = () => {
                 href={getDirectionsUrl(selectedMapSlot)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 px-6 py-3 bg-[#191919] border border-[#1B42CB]/30 text-[#EEECF6] font-semibold rounded-xl hover:bg-[#1B42CB]/10 transition-all duration-300 flex items-center justify-center gap-2"
+                className={`flex-1 px-6 py-3 ${themeClasses.cardBgSecondary} border ${themeClasses.border} ${themeClasses.text} font-semibold rounded-xl ${themeClasses.hover} transition-all duration-300 flex items-center justify-center gap-2`}
               >
-                <Navigation className="w-4 h-4" />
+                <Icons.Navigation className="w-4 h-4" />
                 Get Directions
               </a>
               <button
@@ -527,9 +594,9 @@ const ParkingSlotPage: React.FC = () => {
                   selectedMapSlot.status !== "available" ||
                   selectedMapSlot.availableSlots === 0
                 }
-                className="flex-1 px-6 py-3 bg-linear-to-r from-[#1B42CB] to-[#FF2F6C] text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-[#FF2F6C]/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-[#1B42CB] to-[#FF2F6C] text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-[#FF2F6C]/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                <MapPin className="w-4 h-4" />
+                <Icons.MapPin className="w-4 h-4" />
                 Book Now
               </button>
             </div>
@@ -539,7 +606,7 @@ const ParkingSlotPage: React.FC = () => {
     );
   };
 
-  //  Render List View
+  // Render List View
   const renderListView = () => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -549,17 +616,15 @@ const ParkingSlotPage: React.FC = () => {
             slot.capacity
           );
           const availabilityText = getAvailabilityText(availabilityPercentage);
-          const availabilityColor = getAvailabilityColor(
-            availabilityPercentage
-          );
+          const availabilityColor = getAvailabilityColor(availabilityPercentage);
 
           return (
             <div
               key={slot._id}
-              className="group backdrop-blur-xl bg-[#191919]/60 border border-[#1B42CB]/20 rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl hover:shadow-[#1B42CB]/10 hover:border-[#1B42CB]/40 transition-all duration-500 transform hover:-translate-y-1"
+              className={`group backdrop-blur-xl ${themeClasses.cardBg} ${themeClasses.cardBorder} border rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl hover:shadow-[#1B42CB]/10 hover:border-[#1B42CB]/40 transition-all duration-500 transform hover:-translate-y-1`}
             >
               {/* Status Header */}
-              <div className={`px-6 py-4 ${getStatusColor(slot.status)}`}>
+              <div className={`px-6 py-4 ${getStatusColor(slot.status)} border-b ${themeClasses.border}`}>
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 rounded-full bg-current"></div>
@@ -580,7 +645,7 @@ const ParkingSlotPage: React.FC = () => {
                 {/* Header */}
                 <div className="flex justify-between items-start mb-6">
                   <div>
-                    <h3 className="text-xl font-bold text-[#EEECF6] mb-1">
+                    <h3 className={`text-xl font-bold ${themeClasses.text} mb-1`}>
                       {slot.name}
                     </h3>
                     <div className="flex items-center gap-2">
@@ -593,35 +658,33 @@ const ParkingSlotPage: React.FC = () => {
                       </div>
                       <div className="flex">
                         {[...Array(5)].map((_, i) => (
-                          <span
+                          <Icons.Star
                             key={i}
-                            className={`text-sm ${
+                            className={`w-4 h-4 ${
                               i < Math.floor(slot.rating)
-                                ? "text-[#FF2F6C]"
-                                : "text-[#EEECF6]/30"
+                                ? "text-[#FF2F6C] fill-current"
+                                : themeClasses.textMuted
                             }`}
-                          >
-                            ★
-                          </span>
+                          />
                         ))}
                       </div>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-2xl font-bold bg-linear-to-r from-[#1B42CB] to-[#FF2F6C] bg-clip-text text-transparent">
+                    <div className={`text-2xl font-bold bg-gradient-to-r ${themeClasses.gradient.accent} bg-clip-text text-transparent`}>
                       ₹{Number(slot.pricePerHour || 0).toFixed(2)}
                     </div>
-                    <div className="text-sm text-[#EEECF6]/60">per hour</div>
+                    <div className={`text-sm ${themeClasses.textSecondary}`}>per hour</div>
                   </div>
                 </div>
 
                 {/* Location */}
                 <div className="mb-6 p-4 bg-[#1B42CB]/10 rounded-xl border border-[#1B42CB]/20">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-linear-to-br from-[#1B42CB] to-[#1B42CB]/80 flex items-center justify-center">
-                      <MapPin className="w-4 h-4 text-white" />
+                    <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${themeClasses.gradient.primary} flex items-center justify-center`}>
+                      <Icons.MapPin className="w-4 h-4 text-white" />
                     </div>
-                    <span className="text-[#EEECF6] font-medium truncate">
+                    <span className={`${themeClasses.text} font-medium truncate`}>
                       {slot.location}
                     </span>
                   </div>
@@ -629,11 +692,11 @@ const ParkingSlotPage: React.FC = () => {
 
                 {/* Stats */}
                 <div className="grid grid-cols-3 gap-3 mb-6">
-                  <div className="bg-[#191919]/50 border border-[#1B42CB]/10 rounded-xl p-3 text-center">
-                    <div className="text-sm text-[#EEECF6]/60 mb-1">
+                  <div className={`${themeClasses.cardBgSecondary} border ${themeClasses.border} rounded-xl p-3 text-center`}>
+                    <div className={`text-sm ${themeClasses.textSecondary} mb-1`}>
                       Distance
                     </div>
-                    <div className="text-lg font-bold text-[#EEECF6]">
+                    <div className={`text-lg font-bold ${themeClasses.text}`}>
                       {userLocation && slot.coordinates
                         ? calculateDistance(
                             userLocation.lat,
@@ -644,19 +707,19 @@ const ParkingSlotPage: React.FC = () => {
                         : slot.distance}
                     </div>
                   </div>
-                  <div className="bg-[#191919]/50 border border-[#1B42CB]/10 rounded-xl p-3 text-center">
-                    <div className="text-sm text-[#EEECF6]/60 mb-1">
+                  <div className={`${themeClasses.cardBgSecondary} border ${themeClasses.border} rounded-xl p-3 text-center`}>
+                    <div className={`text-sm ${themeClasses.textSecondary} mb-1`}>
                       Available
                     </div>
-                    <div className="text-lg font-bold text-[#EEECF6]">
+                    <div className={`text-lg font-bold ${themeClasses.text}`}>
                       {slot.availableSlots}
-                      <span className="text-sm text-[#EEECF6]/60 ml-1">
+                      <span className={`text-sm ${themeClasses.textSecondary} ml-1`}>
                         /{slot.capacity}
                       </span>
                     </div>
                   </div>
-                  <div className="bg-[#191919]/50 border border-[#1B42CB]/10 rounded-xl p-3 text-center">
-                    <div className="text-sm text-[#EEECF6]/60 mb-1">Fill %</div>
+                  <div className={`${themeClasses.cardBgSecondary} border ${themeClasses.border} rounded-xl p-3 text-center`}>
+                    <div className={`text-sm ${themeClasses.textSecondary} mb-1`}>Fill %</div>
                     <div className={`text-lg font-bold ${availabilityColor}`}>
                       {availabilityPercentage}%
                     </div>
@@ -666,14 +729,14 @@ const ParkingSlotPage: React.FC = () => {
                 {/* Progress Bar */}
                 <div className="mb-6">
                   <div className="flex justify-between text-sm mb-2">
-                    <span className="text-[#EEECF6]/60">Capacity Usage</span>
-                    <span className="font-semibold text-[#EEECF6]">
+                    <span className={themeClasses.textSecondary}>Capacity Usage</span>
+                    <span className={`font-semibold ${themeClasses.text}`}>
                       {availabilityPercentage}% available
                     </span>
                   </div>
                   <div className="h-2 bg-[#191919] rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-linear-to-r from-[#1B42CB] via-[#FF2F6C] to-[#1B42CB]"
+                      className="h-full bg-gradient-to-r from-[#1B42CB] via-[#FF2F6C] to-[#1B42CB]"
                       style={{ width: `${availabilityPercentage}%` }}
                     ></div>
                   </div>
@@ -685,9 +748,9 @@ const ParkingSlotPage: React.FC = () => {
                     href={getDirectionsUrl(slot)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 px-4 py-3 bg-[#191919] border border-[#1B42CB]/30 text-[#EEECF6] rounded-lg hover:bg-[#1B42CB]/10 transition-colors flex items-center justify-center gap-2"
+                    className={`flex-1 px-4 py-3 ${themeClasses.cardBgSecondary} border ${themeClasses.border} ${themeClasses.text} rounded-lg ${themeClasses.hover} transition-colors flex items-center justify-center gap-2`}
                   >
-                    <Navigation className="w-4 h-4" />
+                    <Icons.Navigation className="w-4 h-4" />
                     Directions
                   </a>
                   <button
@@ -699,11 +762,11 @@ const ParkingSlotPage: React.FC = () => {
                     className={`flex-1 px-4 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
                       slot.status?.toLowerCase() === "available" &&
                       slot.availableSlots > 0
-                        ? "bg-linear-to-r from-[#1B42CB] to-[#FF2F6C] text-white hover:shadow-lg hover:shadow-[#FF2F6C]/20"
-                        : "bg-[#191919] text-[#EEECF6]/40 border border-[#1B42CB]/20 cursor-not-allowed"
+                        ? "bg-gradient-to-r from-[#1B42CB] to-[#FF2F6C] text-white hover:shadow-lg hover:shadow-[#FF2F6C]/20"
+                        : `${themeClasses.cardBgSecondary} ${themeClasses.textSecondary} border ${themeClasses.border} cursor-not-allowed`
                     }`}
                   >
-                    <MapPin className="w-4 h-4" />
+                    <Icons.MapPin className="w-4 h-4" />
                     {slot.status?.toLowerCase() === "available" &&
                     slot.availableSlots > 0
                       ? "Book Now"
@@ -722,18 +785,18 @@ const ParkingSlotPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-linear-to-br from-[#191919] via-[#0f0f0f] to-[#191919] flex items-center justify-center p-4">
+      <div className={`min-h-screen ${themeClasses.bg} transition-colors duration-300 flex items-center justify-center p-4`}>
         <div className="text-center">
           <div className="relative">
-            <div className="w-24 h-24 rounded-full bg-linear-to-r from-[#1B42CB] to-[#FF2F6C] animate-spin"></div>
+            <div className="w-24 h-24 rounded-full bg-gradient-to-r from-[#1B42CB] to-[#FF2F6C] animate-spin"></div>
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-20 h-20 rounded-full bg-[#191919]"></div>
+              <div className={`w-20 h-20 rounded-full ${themeClasses.bg}`}></div>
             </div>
           </div>
-          <p className="mt-6 text-[#EEECF6] text-lg font-semibold">
+          <p className={`mt-6 ${themeClasses.text} text-lg font-semibold`}>
             Loading parking slots...
           </p>
-          <p className="text-[#EEECF6]/60 mt-2">Fetching latest availability</p>
+          <p className={themeClasses.textSecondary}>Fetching latest availability</p>
         </div>
       </div>
     );
@@ -741,26 +804,26 @@ const ParkingSlotPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-linear-to-br from-[#191919] via-[#0f0f0f] to-[#191919] flex items-center justify-center p-4">
-        <div className="backdrop-blur-xl bg-[#1B42CB]/10 border border-[#1B42CB]/30 rounded-3xl p-8 max-w-md w-full shadow-2xl shadow-[#1B42CB]/10">
+      <div className={`min-h-screen ${themeClasses.bg} transition-colors duration-300 flex items-center justify-center p-4`}>
+        <div className={`backdrop-blur-xl ${themeClasses.cardBg} ${themeClasses.cardBorder} border rounded-3xl p-8 max-w-md w-full shadow-2xl shadow-[#1B42CB]/10`}>
           <div className="text-center">
-            <div className="w-20 h-20 bg-linear-to-br from-[#FF2F6C]/20 to-[#1B42CB]/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-[#FF2F6C]/30">
-              <span className="text-3xl">⚠️</span>
+            <div className={`w-20 h-20 bg-gradient-to-br ${themeClasses.gradient.accent}/20 rounded-full flex items-center justify-center mx-auto mb-6 border ${themeClasses.border}`}>
+              <Icons.AlertCircle className="w-8 h-8 text-[#FF2F6C]" />
             </div>
-            <h2 className="text-2xl font-bold text-[#EEECF6] mb-3">
+            <h2 className={`text-2xl font-bold ${themeClasses.text} mb-3`}>
               Connection Error
             </h2>
-            <p className="text-[#EEECF6]/70 mb-6">{error}</p>
+            <p className={`${themeClasses.textSecondary} mb-6`}>{error}</p>
             <div className="flex gap-3">
               <button
                 onClick={() => window.location.reload()}
-                className="flex-1 px-6 py-3 bg-linear-to-r from-[#1B42CB] to-[#1B42CB]/80 text-white font-semibold rounded-xl hover:from-[#1B42CB]/90 hover:to-[#1B42CB]/70 transition-all duration-300 hover:shadow-lg hover:shadow-[#1B42CB]/20"
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-[#1B42CB] to-[#1B42CB]/80 text-white font-semibold rounded-xl hover:from-[#1B42CB]/90 hover:to-[#1B42CB]/70 transition-all duration-300 hover:shadow-lg hover:shadow-[#1B42CB]/20"
               >
                 Retry
               </button>
               <button
                 onClick={() => navigate(-1)}
-                className="px-6 py-3 bg-[#191919] border border-[#1B42CB]/30 text-[#EEECF6] font-semibold rounded-xl hover:bg-[#1B42CB]/10 transition-all duration-300"
+                className={`px-6 py-3 ${themeClasses.cardBgSecondary} border ${themeClasses.border} ${themeClasses.text} font-semibold rounded-xl ${themeClasses.hover} transition-all duration-300`}
               >
                 Go Back
               </button>
@@ -773,7 +836,7 @@ const ParkingSlotPage: React.FC = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-linear-to-br from-[#191919] via-[#0f0f0f] to-[#191919] p-4 md:p-6">
+      <div className={`min-h-screen ${themeClasses.bg} transition-colors duration-300 p-4 md:p-6`}>
         {/* Animated Background Elements */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-40 -right-40 w-80 h-80 bg-[#1B42CB]/10 rounded-full blur-3xl"></div>
@@ -786,61 +849,61 @@ const ParkingSlotPage: React.FC = () => {
           {/* Header Section */}
           <header className="mb-8 md:mb-12">
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-              <div className="backdrop-blur-xl bg-[#1B42CB]/10 border border-[#1B42CB]/20 rounded-2xl p-6 md:p-8 shadow-2xl shadow-[#1B42CB]/10">
+              <div className={`backdrop-blur-xl ${themeClasses.cardBg} ${themeClasses.cardBorder} border rounded-2xl p-6 md:p-8 shadow-2xl shadow-[#1B42CB]/10`}>
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-linear-to-br from-[#1B42CB] to-[#FF2F6C] flex items-center justify-center">
-                    <span className="text-xl">🚗</span>
+                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${themeClasses.gradient.accent} flex items-center justify-center`}>
+                    <Icons.Car className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h1 className="text-3xl md:text-4xl font-bold bg-linear-to-r from-[#EEECF6] to-[#1B42CB] bg-clip-text text-transparent">
+                    <h1 className={`text-3xl md:text-4xl font-bold bg-gradient-to-r ${themeClasses.gradient.accent} bg-clip-text text-transparent`}>
                       SmartPark
                     </h1>
-                    <p className="text-[#EEECF6]/60">
-                      Intelligent Parking Solutions
+                    <p className={themeClasses.textSecondary}>
+                      Parking Solutions
                     </p>
                   </div>
                 </div>
-                <p className="text-[#EEECF6]/80 max-w-2xl">
+                <p className={`${themeClasses.textSecondary} max-w-2xl`}>
                   Find, book, and manage parking slots with real-time
                   availability and smart recommendations.
                 </p>
               </div>
 
-              <div className="backdrop-blur-xl bg-[#191919]/80 border border-[#EEECF6]/10 rounded-2xl p-6 shadow-xl">
+              <div className={`backdrop-blur-xl ${themeClasses.cardBgSecondary} border ${themeClasses.border} rounded-2xl p-6 shadow-xl`}>
                 <div className="grid grid-cols-2 gap-6">
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-white mb-1">
+                    <div className={`text-3xl font-bold ${themeClasses.text} mb-1`}>
                       {parkingSlots.reduce(
                         (sum, slot) => sum + slot.availableSlots,
                         0
                       )}
                     </div>
-                    <div className="text-sm text-[#EEECF6]/60">
+                    <div className={`text-sm ${themeClasses.textSecondary}`}>
                       Available Slots
                     </div>
                   </div>
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-white mb-1">
+                    <div className={`text-3xl font-bold ${themeClasses.text} mb-1`}>
                       {parkingSlots.length}
                     </div>
-                    <div className="text-sm text-[#EEECF6]/60">Locations</div>
+                    <div className={`text-sm ${themeClasses.textSecondary}`}>Locations</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-white mb-1">
+                    <div className={`text-3xl font-bold ${themeClasses.text} mb-1`}>
                       ₹{Math.min(...parkingSlots.map((s) => s.pricePerHour))}
                     </div>
-                    <div className="text-sm text-[#EEECF6]/60">
+                    <div className={`text-sm ${themeClasses.textSecondary}`}>
                       Starting Price
                     </div>
                   </div>
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-white mb-1">
+                    <div className={`text-3xl font-bold ${themeClasses.text} mb-1`}>
                       {parkingSlots.reduce(
                         (sum, slot) => sum + slot.capacity,
                         0
                       )}
                     </div>
-                    <div className="text-sm text-[#EEECF6]/60">
+                    <div className={`text-sm ${themeClasses.textSecondary}`}>
                       Total Capacity
                     </div>
                   </div>
@@ -850,56 +913,44 @@ const ParkingSlotPage: React.FC = () => {
           </header>
 
           {/* Filter/Search Section with View Toggle */}
-          <div className="mb-8 backdrop-blur-xl bg-[#191919]/60 border border-[#1B42CB]/20 rounded-2xl p-6 shadow-xl">
+          <div className={`mb-8 backdrop-blur-xl ${themeClasses.cardBg} ${themeClasses.cardBorder} border rounded-2xl p-6 shadow-xl`}>
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1 relative">
                 <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                  <svg
-                    className="w-5 h-5 text-[#1B42CB]"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    />
-                  </svg>
+                  <Icons.Search className="w-5 h-5 text-[#1B42CB]" />
                 </div>
                 <input
                   type="text"
                   placeholder="Search location or parking name..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 bg-[#191919]/50 border border-[#1B42CB]/30 rounded-xl text-[#EEECF6] placeholder-[#EEECF6]/40 focus:outline-none focus:border-[#1B42CB] focus:ring-2 focus:ring-[#1B42CB]/20 transition-all duration-300"
+                  className={`w-full pl-12 pr-4 py-4 ${themeClasses.cardBgSecondary} border ${themeClasses.border} rounded-xl ${themeClasses.text} placeholder-${themeClasses.textMuted} focus:outline-none focus:border-[#1B42CB] focus:ring-2 focus:ring-[#1B42CB]/20 transition-all duration-300`}
                 />
               </div>
 
               {/* View Toggle Buttons */}
               <div className="flex items-center gap-3">
-                <div className="flex bg-[#191919]/50 border border-[#1B42CB]/30 rounded-xl overflow-hidden">
+                <div className={`flex ${themeClasses.cardBgSecondary} border ${themeClasses.border} rounded-xl overflow-hidden`}>
                   <button
                     onClick={() => setViewMode("list")}
                     className={`px-4 py-3 flex items-center gap-2 transition-all duration-300 ${
                       viewMode === "list"
-                        ? "bg-linear-to-r from-[#1B42CB] to-[#FF2F6C] text-white"
-                        : "text-[#EEECF6]/70 hover:text-[#EEECF6] hover:bg-[#1B42CB]/10"
+                        ? "bg-gradient-to-r from-[#1B42CB] to-[#FF2F6C] text-white"
+                        : `${themeClasses.textSecondary} ${themeClasses.hover}`
                     }`}
                   >
-                    <List className="w-4 h-4" />
+                    <Icons.List className="w-4 h-4" />
                     List
                   </button>
                   <button
                     onClick={() => setViewMode("map")}
                     className={`px-4 py-3 flex items-center gap-2 transition-all duration-300 ${
                       viewMode === "map"
-                        ? "bg-linear-to-r from-[#1B42CB] to-[#FF2F6C] text-white"
-                        : "text-[#EEECF6]/70 hover:text-[#EEECF6] hover:bg-[#1B42CB]/10"
+                        ? "bg-gradient-to-r from-[#1B42CB] to-[#FF2F6C] text-white"
+                        : `${themeClasses.textSecondary} ${themeClasses.hover}`
                     }`}
                   >
-                    <Map className="w-4 h-4" />
+                    <Icons.Map className="w-4 h-4" />
                     Map
                   </button>
                 </div>
@@ -907,7 +958,7 @@ const ParkingSlotPage: React.FC = () => {
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="px-4 py-4 bg-[#191919]/50 border border-[#1B42CB]/30 rounded-xl text-[#EEECF6] focus:outline-none focus:border-[#1B42CB] focus:ring-2 focus:ring-[#1B42CB]/20 transition-all duration-300"
+                  className={`px-4 py-4 ${themeClasses.cardBgSecondary} border ${themeClasses.border} rounded-xl ${themeClasses.text} focus:outline-none focus:border-[#1B42CB] focus:ring-2 focus:ring-[#1B42CB]/20 transition-all duration-300`}
                 >
                   <option value="">All Status</option>
                   <option value="available">Available</option>
@@ -917,7 +968,7 @@ const ParkingSlotPage: React.FC = () => {
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="px-4 py-4 bg-[#191919]/50 border border-[#1B42CB]/30 rounded-xl text-[#EEECF6] focus:outline-none focus:border-[#1B42CB] focus:ring-2 focus:ring-[#1B42CB]/20 transition-all duration-300"
+                  className={`px-4 py-4 ${themeClasses.cardBgSecondary} border ${themeClasses.border} rounded-xl ${themeClasses.text} focus:outline-none focus:border-[#1B42CB] focus:ring-2 focus:ring-[#1B42CB]/20 transition-all duration-300`}
                 >
                   <option value="">Sort by</option>
                   <option value="price">Price: Low to High</option>
@@ -930,14 +981,14 @@ const ParkingSlotPage: React.FC = () => {
 
           {/* View Content */}
           {filteredAndSortedSlots.length === 0 ? (
-            <div className="backdrop-blur-xl bg-[#191919]/60 border border-[#1B42CB]/20 rounded-2xl p-12 text-center">
-              <div className="w-24 h-24 bg-linear-to-br from-[#1B42CB]/20 to-[#FF2F6C]/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-[#1B42CB]/30">
-                <span className="text-3xl">🚗</span>
+            <div className={`backdrop-blur-xl ${themeClasses.cardBg} ${themeClasses.cardBorder} border rounded-2xl p-12 text-center`}>
+              <div className={`w-24 h-24 bg-gradient-to-br ${themeClasses.gradient.accent}/20 rounded-full flex items-center justify-center mx-auto mb-6 border ${themeClasses.border}`}>
+                <Icons.Car className="w-8 h-8 text-[#1B42CB]" />
               </div>
-              <h3 className="text-2xl font-bold text-[#EEECF6] mb-3">
+              <h3 className={`text-2xl font-bold ${themeClasses.text} mb-3`}>
                 No Parking Slots Found
               </h3>
-              <p className="text-[#EEECF6]/60 mb-6">
+              <p className={`${themeClasses.textSecondary} mb-6`}>
                 {searchTerm || statusFilter
                   ? "Try adjusting your filters"
                   : "Check back later for available spots"}
@@ -949,7 +1000,7 @@ const ParkingSlotPage: React.FC = () => {
                     setStatusFilter("");
                     setSortBy("");
                   }}
-                  className="px-6 py-3 bg-linear-to-r from-[#1B42CB] to-[#1B42CB]/80 text-white font-semibold rounded-xl hover:from-[#1B42CB]/90 hover:to-[#1B42CB]/70 transition-all duration-300"
+                  className="px-6 py-3 bg-gradient-to-r from-[#1B42CB] to-[#1B42CB]/80 text-white font-semibold rounded-xl hover:from-[#1B42CB]/90 hover:to-[#1B42CB]/70 transition-all duration-300"
                 >
                   Clear Filters
                 </button>
@@ -963,20 +1014,20 @@ const ParkingSlotPage: React.FC = () => {
 
           {/* Summary Section */}
           {parkingSlots.length > 0 && (
-            <div className="mt-8 backdrop-blur-xl bg-linear-to-r from-[#1B42CB]/10 to-[#FF2F6C]/10 border border-[#1B42CB]/20 rounded-2xl p-8">
+            <div className={`mt-8 backdrop-blur-xl bg-gradient-to-r ${themeClasses.gradient.accent}/10 border ${themeClasses.border} rounded-2xl p-8`}>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-white mb-2">
+                  <div className={`text-3xl font-bold ${themeClasses.text} mb-2`}>
                     {
                       filteredAndSortedSlots.filter(
                         (s) => s.status === "available"
                       ).length
                     }
                   </div>
-                  <div className="text-[#EEECF6]/60">Available Now</div>
+                  <div className={themeClasses.textSecondary}>Available Now</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-white mb-2">
+                  <div className={`text-3xl font-bold ${themeClasses.text} mb-2`}>
                     {Math.round(
                       (filteredAndSortedSlots.reduce(
                         (sum, s) => sum + s.availableSlots / s.capacity,
@@ -987,10 +1038,10 @@ const ParkingSlotPage: React.FC = () => {
                     )}
                     %
                   </div>
-                  <div className="text-[#EEECF6]/60">Average Availability</div>
+                  <div className={themeClasses.textSecondary}>Average Availability</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-white mb-2">
+                  <div className={`text-3xl font-bold ${themeClasses.text} mb-2`}>
                     ₹
                     {Math.round(
                       filteredAndSortedSlots.reduce(
@@ -999,13 +1050,13 @@ const ParkingSlotPage: React.FC = () => {
                       ) / filteredAndSortedSlots.length
                     )}
                   </div>
-                  <div className="text-[#EEECF6]/60">Avg. Price/Hour</div>
+                  <div className={themeClasses.textSecondary}>Avg. Price/Hour</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-white mb-2">
+                  <div className={`text-3xl font-bold ${themeClasses.text} mb-2`}>
                     {filteredAndSortedSlots.length}
                   </div>
-                  <div className="text-[#EEECF6]/60">Showing Slots</div>
+                  <div className={themeClasses.textSecondary}>Showing Slots</div>
                 </div>
               </div>
             </div>
@@ -1018,18 +1069,18 @@ const ParkingSlotPage: React.FC = () => {
         id="booking-modal"
         className="hidden fixed inset-0 bg-black/80 backdrop-blur-sm items-center justify-center z-50 p-4"
       >
-        <div className="backdrop-blur-xl bg-[#191919]/90 border border-[#1B42CB]/30 rounded-2xl w-full max-w-md shadow-2xl shadow-[#1B42CB]/10 animate-scale-in">
+        <div className={`backdrop-blur-xl ${themeClasses.cardBgSecondary} ${themeClasses.cardBorder} border rounded-2xl w-full max-w-md shadow-2xl shadow-[#1B42CB]/10 animate-scale-in`}>
           {/* Modal Header */}
-          <div className="p-6 border-b border-[#1B42CB]/20">
+          <div className={`p-6 border-b ${themeClasses.border}`}>
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold bg-linear-to-r from-[#EEECF6] to-[#1B42CB] bg-clip-text text-transparent">
+              <h2 className={`text-2xl font-bold bg-gradient-to-r ${themeClasses.gradient.accent} bg-clip-text text-transparent`}>
                 Confirm Booking
               </h2>
               <button
                 onClick={closeModal}
-                className="w-8 h-8 rounded-lg bg-[#191919] border border-[#1B42CB]/30 flex items-center justify-center text-[#EEECF6] hover:bg-[#FF2F6C]/10 hover:border-[#FF2F6C]/30 transition-colors"
+                className={`w-8 h-8 rounded-lg ${themeClasses.cardBg} border ${themeClasses.border} flex items-center justify-center ${themeClasses.text} ${themeClasses.hover} transition-colors`}
               >
-                ×
+                <Icons.X className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -1040,32 +1091,32 @@ const ParkingSlotPage: React.FC = () => {
             {selectedSlot && (
               <>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-[#1B42CB]/10 rounded-xl">
+                  <div className={`flex items-center justify-between p-4 bg-[#1B42CB]/10 rounded-xl`}>
                     <div>
-                      <div className="text-sm text-[#EEECF6]/60">
+                      <div className={`text-sm ${themeClasses.textSecondary}`}>
                         Parking Slot
                       </div>
-                      <div className="font-bold text-[#EEECF6]">
+                      <div className={`font-bold ${themeClasses.text}`}>
                         {selectedSlot.name}
                       </div>
                     </div>
-                    <div className="w-12 h-12 rounded-lg bg-linear-to-br from-[#1B42CB] to-[#FF2F6C] flex items-center justify-center">
-                      <span className="text-xl">🚗</span>
+                    <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${themeClasses.gradient.accent} flex items-center justify-center`}>
+                      <Icons.Car className="w-6 h-6 text-white" />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="p-3 bg-[#191919]/50 rounded-lg">
-                      <div className="text-sm text-[#EEECF6]/60">Location</div>
-                      <div className="font-medium text-[#EEECF6] truncate">
+                    <div className={`p-3 ${themeClasses.cardBg} rounded-lg`}>
+                      <div className={`text-sm ${themeClasses.textSecondary}`}>Location</div>
+                      <div className={`font-medium ${themeClasses.text} truncate`}>
                         {selectedSlot.location}
                       </div>
                     </div>
-                    <div className="p-3 bg-[#191919]/50 rounded-lg">
-                      <div className="text-sm text-[#EEECF6]/60">
+                    <div className={`p-3 ${themeClasses.cardBg} rounded-lg`}>
+                      <div className={`text-sm ${themeClasses.textSecondary}`}>
                         Price/Hour
                       </div>
-                      <div className="font-medium text-[#EEECF6]">
+                      <div className={`font-medium ${themeClasses.text}`}>
                         ₹{selectedSlot.pricePerHour}
                       </div>
                     </div>
@@ -1074,7 +1125,7 @@ const ParkingSlotPage: React.FC = () => {
 
                 {/* Duration Selector */}
                 <div>
-                  <h3 className="text-lg font-semibold text-white mb-3">
+                  <h3 className={`text-lg font-semibold ${themeClasses.text} mb-3`}>
                     Select Duration
                   </h3>
                   <div className="grid grid-cols-4 gap-2">
@@ -1084,8 +1135,8 @@ const ParkingSlotPage: React.FC = () => {
                         onClick={() => handleDurationChange(hour)}
                         className={`py-2 rounded-lg font-medium transition-all ${
                           duration === hour
-                            ? "bg-blue-600 text-white"
-                            : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                            ? "bg-gradient-to-r from-[#1B42CB] to-[#FF2F6C] text-white"
+                            : `${themeClasses.cardBg} ${themeClasses.text} ${themeClasses.hover}`
                         }`}
                       >
                         {hour}h
@@ -1095,25 +1146,25 @@ const ParkingSlotPage: React.FC = () => {
                 </div>
 
                 {/* Price Summary */}
-                <div className="bg-gray-900/50 rounded-xl p-4">
+                <div className={`${themeClasses.cardBg} rounded-xl p-4`}>
                   <div className="space-y-3">
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Price per hour</span>
-                      <span className="text-white">
+                      <span className={themeClasses.textSecondary}>Price per hour</span>
+                      <span className={themeClasses.text}>
                         ₹{selectedSlot.pricePerHour}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Duration</span>
-                      <span className="text-white">
+                      <span className={themeClasses.textSecondary}>Duration</span>
+                      <span className={themeClasses.text}>
                         {duration} hour{duration !== 1 ? "s" : ""}
                       </span>
                     </div>
-                    <div className="border-t border-gray-700 pt-3 flex justify-between">
-                      <span className="text-lg font-semibold text-white">
+                    <div className={`border-t ${themeClasses.border} pt-3 flex justify-between`}>
+                      <span className={`text-lg font-semibold ${themeClasses.text}`}>
                         Total Amount
                       </span>
-                      <span className="text-2xl font-bold text-white">
+                      <span className={`text-2xl font-bold ${themeClasses.text}`}>
                         ₹{selectedSlot.pricePerHour * duration}
                       </span>
                     </div>
@@ -1122,11 +1173,11 @@ const ParkingSlotPage: React.FC = () => {
 
                 {/* Payment Method */}
                 <div className="space-y-2">
-                  <h3 className="text-lg font-semibold text-white">
+                  <h3 className={`text-lg font-semibold ${themeClasses.text}`}>
                     Payment Method
                   </h3>
                   <div className="space-y-2">
-                    <div className="flex items-center gap-3 p-3 bg-gray-900/50 rounded-lg">
+                    <div className={`flex items-center gap-3 p-3 ${themeClasses.cardBg} rounded-lg`}>
                       <input
                         type="radio"
                         id="upi"
@@ -1134,18 +1185,18 @@ const ParkingSlotPage: React.FC = () => {
                         defaultChecked
                         className="w-5 h-5"
                       />
-                      <label htmlFor="upi" className="flex-1 text-white">
+                      <label htmlFor="upi" className={`flex-1 ${themeClasses.text}`}>
                         UPI / QR Code
                       </label>
                     </div>
-                    <div className="flex items-center gap-3 p-3 bg-gray-900/50 rounded-lg">
+                    <div className={`flex items-center gap-3 p-3 ${themeClasses.cardBg} rounded-lg`}>
                       <input
                         type="radio"
                         id="card"
                         name="payment"
                         className="w-5 h-5"
                       />
-                      <label htmlFor="card" className="flex-1 text-white">
+                      <label htmlFor="card" className={`flex-1 ${themeClasses.text}`}>
                         Credit/Debit Card
                       </label>
                     </div>
@@ -1156,33 +1207,23 @@ const ParkingSlotPage: React.FC = () => {
                 <div className="flex gap-3">
                   <button
                     onClick={closeModal}
-                    className="flex-1 px-6 py-3 bg-gray-700 text-white font-semibold rounded-lg hover:bg-gray-600"
+                    className={`flex-1 px-6 py-3 ${themeClasses.cardBg} ${themeClasses.text} font-semibold rounded-lg ${themeClasses.hover}`}
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleConfirmBooking}
-                    className="flex-1 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2"
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-[#1B42CB] to-[#FF2F6C] text-white font-semibold rounded-lg hover:shadow-lg hover:shadow-[#FF2F6C]/20 flex items-center justify-center gap-2"
                   >
                     Pay ₹{paymentAmount}
-                    <span>→</span>
+                    <Icons.ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
 
                 {/* Security Note */}
-                <div className="text-center pt-4 border-t border-gray-700">
-                  <div className="flex items-center justify-center gap-2 text-sm text-gray-400">
-                    <svg
-                      className="w-4 h-4"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
+                <div className={`text-center pt-4 border-t ${themeClasses.border}`}>
+                  <div className={`flex items-center justify-center gap-2 text-sm ${themeClasses.textSecondary}`}>
+                    <Icons.Lock className="w-4 h-4" />
                     <span>Secure payment • Instant confirmation</span>
                   </div>
                 </div>
