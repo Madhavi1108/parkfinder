@@ -1,41 +1,47 @@
-# SmartPark 🚗
+# SmartPark
+
 ### Intelligent Urban Parking Management System
 
 SmartPark is a full-stack MERN-based parking management system designed to solve real-world urban parking challenges. It provides real-time parking slot availability, smart booking, and a powerful admin dashboard with a clean and responsive user experience.
 
 ---
 
-## ✨ Key Features
+## Key Features
 
-- 🔴 Real-time parking slot availability based on location
-- 🗺️ Dual view interface (List View & Interactive Map View)
-- ⚡ One-click smart booking with instant confirmation
-- 🧑‍💼 Admin dashboard for complete system control
-- 🔐 Secure authentication with role-based access
-- 📱 Fully responsive across all devices
+- Real-time parking slot availability based on location
+- Dual view interface (List View & Interactive Map View)
+- One-click smart booking with instant confirmation
+- Admin dashboard for complete system control
+- Secure authentication with role-based access
+- Fully responsive across all devices
+- User Dashboard with graph and charts
+- Entry / Exit time tranking
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Frontend
+
 - React.js
 - TypeScript
 - Tailwind CSS
 
 ### Backend
+
 - Node.js
 - Express.js
 - RESTful APIs
 
 ### Database & Auth
+
 - MongoDB & Mongoose
 - JWT Authentication
 - Bcrypt for password hashing
 
 ---
 
-## 🎨 Highlights
+## Highlights
 
 - Modern dark UI with smooth animations
 - Real-time filters (location, price, availability, rating)
@@ -45,7 +51,7 @@ SmartPark is a full-stack MERN-based parking management system designed to solve
 
 ---
 
-## 📱 Application Screens
+## Application Screens
 
 - Landing Page with stats and hero section
 - Parking Slot Explorer (List & Map view)
@@ -56,7 +62,7 @@ SmartPark is a full-stack MERN-based parking management system designed to solve
 
 ---
 
-## 🚀 What I Learned
+## What I Learned
 
 - Building end-to-end MERN stack applications
 - Implementing role-based authentication & authorization
@@ -66,7 +72,7 @@ SmartPark is a full-stack MERN-based parking management system designed to solve
 
 ---
 
-## 🧩 Challenges Solved
+## Challenges Solved
 
 - Real-time slot availability handling
 - Interactive map view without third-party libraries
@@ -76,14 +82,14 @@ SmartPark is a full-stack MERN-based parking management system designed to solve
 
 ---
 
-## 🔗 Live Links
+## Live Links
 
-- **GitHub Repository:** https://github.com/imanchalsing/parkfinder
-- **Live Demo:** https://parkfinder-three.vercel.app
+- **GitHub Repository:** <https://github.com/imanchalsing/parkfinder>
+- **Live Demo:** <https://parkfinder-three.vercel.app>
 
 ---
 
-## 📌 Project Structure
+## Project Structure
 
 - client (frontend)
 - server (backend)
