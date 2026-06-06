@@ -15,6 +15,11 @@ const parkingSchema = new mongoose.Schema({
   closingTime: String,
   floor: { type: String, default: "Ground Floor" },
   slotNumber: { type: String, default: null },
+  emergencyContact: {
+    phone: String,
+    supportEmail: String,
+    managerName: String,
+  },
 });
 
 export default mongoose.model("Parking", parkingSchema);
