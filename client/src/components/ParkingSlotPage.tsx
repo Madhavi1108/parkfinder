@@ -93,6 +93,55 @@ interface ApiResponse {
   data: ParkingSlot[];
 }
 
+const THEME_CONFIG = {
+  light: {
+    bg: "bg-gray-50",
+    text: "text-gray-900",
+    textSecondary: "text-gray-600",
+    textMuted: "text-gray-500",
+    border: "border-gray-200",
+    cardBg: "bg-white",
+    cardBgSecondary: "bg-gray-100",
+    cardBorder: "border-gray-200",
+    overlay: "bg-black/5",
+    hover: "hover:bg-gray-100",
+    gradient: {
+      primary: "from-blue-600 to-blue-500",
+      secondary: "from-pink-600 to-pink-500",
+      accent: "from-blue-600 to-pink-600",
+    },
+    status: {
+      available: "bg-green-100 text-green-700 border-green-200",
+      occupied: "bg-red-100 text-red-700 border-red-200",
+      maintenance: "bg-yellow-100 text-yellow-700 border-yellow-200",
+      default: "bg-gray-100 text-gray-700 border-gray-200",
+    },
+  },
+  dark: {
+    bg: "bg-[#191919]",
+    text: "text-[#EEECF6]",
+    textSecondary: "text-[#EEECF6]/70",
+    textMuted: "text-[#EEECF6]/50",
+    border: "border-[#1B42CB]/20",
+    cardBg: "bg-[#191919]/60",
+    cardBgSecondary: "bg-[#191919]/80",
+    cardBorder: "border-[#1B42CB]/20",
+    overlay: "bg-black/40",
+    hover: "hover:bg-[#1B42CB]/10",
+    gradient: {
+      primary: "from-[#1B42CB] to-[#1B42CB]/80",
+      secondary: "from-[#FF2F6C] to-[#FF2F6C]/80",
+      accent: "from-[#1B42CB] to-[#FF2F6C]",
+    },
+    status: {
+      available: "bg-green-500/20 text-green-300 border-green-500/30",
+      occupied: "bg-red-500/20 text-red-300 border-red-500/30",
+      maintenance: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
+      default: "bg-gray-500/20 text-gray-300 border-gray-500/30",
+    },
+  },
+} as const;
+
 // Mock coordinates for demo
 const mockCoordinates = [
   { lat: 28.6139, lng: 77.209 }, // Delhi
@@ -219,11 +268,21 @@ const ParkingSlotPage: React.FC = () => {
   // const [favorites, setFavorites] = useState<string[]>([]);
 
   // Navigation & routing hook usage
-  const { routeCoords, loading: routingLoading, error: routingError, calculateRoute, clearRoute } = useRouteNavigation();
+  const {
+    routeCoords,
+    loading: routingLoading,
+    error: routingError,
+    calculateRoute,
+    clearRoute,
+  } = useRouteNavigation();
   const [geoError, setGeoError] = useState<string | null>(null);
 
   const handleNavigate = (slot: ParkingSlot) => {
-    if (!slot.coordinates || typeof slot.coordinates.lat !== "number" || typeof slot.coordinates.lng !== "number") {
+    if (
+      !slot.coordinates ||
+      typeof slot.coordinates.lat !== "number" ||
+      typeof slot.coordinates.lng !== "number"
+    ) {
       alert("Error: Parking slot coordinates are missing or invalid.");
       return;
     }
@@ -265,59 +324,9 @@ const ParkingSlotPage: React.FC = () => {
   // Detect system theme
   const { theme } = useTheme();
 
-  // Theme-based classes
-  const getThemeClasses = () => {
-    return theme === "light"
-      ? {
-          bg: "bg-gray-50",
-          text: "text-gray-900",
-          textSecondary: "text-gray-600",
-          textMuted: "text-gray-500",
-          border: "border-gray-200",
-          cardBg: "bg-white",
-          cardBgSecondary: "bg-gray-100",
-          cardBorder: "border-gray-200",
-          overlay: "bg-black/5",
-          hover: "hover:bg-gray-100",
-          gradient: {
-            primary: "from-blue-600 to-blue-500",
-            secondary: "from-pink-600 to-pink-500",
-            accent: "from-blue-600 to-pink-600",
-          },
-          status: {
-            available: "bg-green-100 text-green-700 border-green-200",
-            occupied: "bg-red-100 text-red-700 border-red-200",
-            maintenance: "bg-yellow-100 text-yellow-700 border-yellow-200",
-            default: "bg-gray-100 text-gray-700 border-gray-200",
-          },
-        }
-      : {
-          bg: "bg-[#191919]",
-          text: "text-[#EEECF6]",
-          textSecondary: "text-[#EEECF6]/70",
-          textMuted: "text-[#EEECF6]/50",
-          border: "border-[#1B42CB]/20",
-          cardBg: "bg-[#191919]/60",
-          cardBgSecondary: "bg-[#191919]/80",
-          cardBorder: "border-[#1B42CB]/20",
-          overlay: "bg-black/40",
-          hover: "hover:bg-[#1B42CB]/10",
-          gradient: {
-            primary: "from-[#1B42CB] to-[#1B42CB]/80",
-            secondary: "from-[#FF2F6C] to-[#FF2F6C]/80",
-            accent: "from-[#1B42CB] to-[#FF2F6C]",
-          },
-          status: {
-            available: "bg-green-500/20 text-green-300 border-green-500/30",
-            occupied: "bg-red-500/20 text-red-300 border-red-500/30",
-            maintenance:
-              "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
-            default: "bg-gray-500/20 text-gray-300 border-gray-500/30",
-          },
-        };
-  };
-
-  const themeClasses = getThemeClasses();
+  // Use the pre-computed static map to prevent unnecessary re-allocations during render
+  const themeClasses =
+    THEME_CONFIG[theme as keyof typeof THEME_CONFIG] || THEME_CONFIG.light;
 
   /**
    * Fetches parking slots from GET /api/admin/slots.
@@ -379,7 +388,10 @@ const ParkingSlotPage: React.FC = () => {
         setUserLocation(loc);
       })
       .catch((error) => {
-        console.warn("Initial user location fetch failed, using fallback Delhi coordinates:", error);
+        console.warn(
+          "Initial user location fetch failed, using fallback Delhi coordinates:",
+          error,
+        );
         setUserLocation({ lat: 28.6139, lng: 77.209 });
       });
 
@@ -404,13 +416,13 @@ const ParkingSlotPage: React.FC = () => {
   //   locationId: string,
   // ) => {
   //   e.stopPropagation(); // Prevents map markers from triggering if nested
-  // 
+  //
   //   if (!token || !user) {
   //     alert("Please login to save favorite locations");
   //     navigate("/login");
   //     return;
   //   }
-  // 
+  //
   //   try {
   //     // Optimistically update UI
   //     setFavorites((prev) =>
@@ -418,7 +430,7 @@ const ParkingSlotPage: React.FC = () => {
   //         ? prev.filter((id) => id !== locationId)
   //         : [...prev, locationId],
   //     );
-  // 
+  //
   //     const res = await fetch(`/api/favorites/${locationId}`, {
   //       method: "POST",
   //       headers: {
@@ -426,7 +438,7 @@ const ParkingSlotPage: React.FC = () => {
   //         "Content-Type": "application/json",
   //       },
   //     });
-  // 
+  //
   //     const data = await res.json();
   //     if (!data.success) {
   //       // Revert on failure
@@ -676,8 +688,13 @@ const ParkingSlotPage: React.FC = () => {
 
             {(geoError || routingError) && (
               <div className="absolute inset-x-0 top-0 bg-red-600/90 text-white px-3 py-2 text-xs font-semibold z-[1000] flex justify-between items-center">
-                <span className="truncate pr-2">Error: {geoError || routingError}</span>
-                <button onClick={handleClearRoute} className="hover:opacity-80 shrink-0">
+                <span className="truncate pr-2">
+                  Error: {geoError || routingError}
+                </span>
+                <button
+                  onClick={handleClearRoute}
+                  className="hover:opacity-80 shrink-0"
+                >
                   <Icons.X className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -694,7 +711,11 @@ const ParkingSlotPage: React.FC = () => {
             )}
 
             <MapContainer
-              center={userLocation ? [userLocation.lat, userLocation.lng] : [28.6139, 77.209]}
+              center={
+                userLocation
+                  ? [userLocation.lat, userLocation.lng]
+                  : [28.6139, 77.209]
+              }
               zoom={13}
               style={{ height: "100%", width: "100%" }}
               scrollWheelZoom={true}
@@ -707,9 +728,14 @@ const ParkingSlotPage: React.FC = () => {
 
               {/* User location marker */}
               {userLocation && (
-                <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon}>
+                <Marker
+                  position={[userLocation.lat, userLocation.lng]}
+                  icon={userIcon}
+                >
                   <Popup>
-                    <div className="font-semibold text-gray-800">Your Location</div>
+                    <div className="font-semibold text-gray-800">
+                      Your Location
+                    </div>
                   </Popup>
                 </Marker>
               )}
@@ -732,8 +758,12 @@ const ParkingSlotPage: React.FC = () => {
                   >
                     <Popup>
                       <div className="p-2 min-w-[200px] text-gray-800">
-                        <h3 className="font-bold text-base text-gray-900 mb-1">{slot.name}</h3>
-                        <p className="text-xs text-gray-600 mb-2">{slot.location}</p>
+                        <h3 className="font-bold text-base text-gray-900 mb-1">
+                          {slot.name}
+                        </h3>
+                        <p className="text-xs text-gray-600 mb-2">
+                          {slot.location}
+                        </p>
                         <div className="flex justify-between items-center text-xs font-semibold mb-2">
                           <span>₹{slot.pricePerHour}/hr</span>
                           <span
@@ -1127,8 +1157,13 @@ const ParkingSlotPage: React.FC = () => {
                         EV Charging Available
                       </div>
                       {slot.chargerType && slot.chargerType !== "None" && (
-                        <div className={`text-xs ${themeClasses.textSecondary} mt-0.5`}>
-                          Charger type: <span className="font-semibold text-emerald-300">{slot.chargerType}</span>
+                        <div
+                          className={`text-xs ${themeClasses.textSecondary} mt-0.5`}
+                        >
+                          Charger type:{" "}
+                          <span className="font-semibold text-emerald-300">
+                            {slot.chargerType}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -1444,7 +1479,11 @@ const ParkingSlotPage: React.FC = () => {
                   role="switch"
                   aria-checked={evFilter}
                   onClick={() => setEvFilter((prev) => !prev)}
-                  title={evFilter ? "Showing EV-only slots" : "Show EV charging slots only"}
+                  title={
+                    evFilter
+                      ? "Showing EV-only slots"
+                      : "Show EV charging slots only"
+                  }
                   className={`relative inline-flex items-center gap-2.5 px-4 py-3 rounded-xl border font-semibold text-sm transition-all duration-300 select-none ${
                     evFilter
                       ? "bg-emerald-500/20 border-emerald-500/60 text-emerald-300 shadow-lg shadow-emerald-500/20"
@@ -1525,7 +1564,9 @@ const ParkingSlotPage: React.FC = () => {
             {/* Active filter pill summary */}
             {evFilter && (
               <div className="mt-4 flex items-center gap-2">
-                <span className={`text-xs ${themeClasses.textSecondary}`}>Active filters:</span>
+                <span className={`text-xs ${themeClasses.textSecondary}`}>
+                  Active filters:
+                </span>
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/40">
                   <Icons.Zap className="w-3 h-3 fill-current" />
                   EV Charging Only
@@ -1548,12 +1589,16 @@ const ParkingSlotPage: React.FC = () => {
               <div
                 className={`w-24 h-24 bg-gradient-to-br ${themeClasses.gradient.accent}/20 rounded-full flex items-center justify-center mx-auto mb-6 border ${themeClasses.border}`}
               >
-                {evFilter
-                  ? <Icons.Zap className="w-8 h-8 text-emerald-400" />
-                  : <Icons.Car className="w-8 h-8 text-[#1B42CB]" />}
+                {evFilter ? (
+                  <Icons.Zap className="w-8 h-8 text-emerald-400" />
+                ) : (
+                  <Icons.Car className="w-8 h-8 text-[#1B42CB]" />
+                )}
               </div>
               <h3 className={`text-2xl font-bold ${themeClasses.text} mb-3`}>
-                {evFilter ? "No EV Charging Slots Found" : "No Parking Slots Found"}
+                {evFilter
+                  ? "No EV Charging Slots Found"
+                  : "No Parking Slots Found"}
               </h3>
               <p className={`${themeClasses.textSecondary} mb-6`}>
                 {searchTerm || statusFilter || evFilter
@@ -1864,6 +1909,6 @@ const ParkingSlotPage: React.FC = () => {
       </div>
     </>
   );
-};
+};;
 
 export default ParkingSlotPage;
