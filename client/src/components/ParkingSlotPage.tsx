@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import * as Icons from "lucide-react";
 import { useAuth } from "../context/AuthContext";
@@ -301,7 +301,7 @@ const ParkingSlotPage: React.FC = () => {
    * Passes `isEV=true` as a query param when the EV filter is active,
    * which the backend's getParkingSlots controller handles natively.
    */
-  const fetchParkingSlots = async (isEV: boolean = false) => {
+  const fetchParkingSlots = useCallback(async (isEV: boolean = false) => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
@@ -329,7 +329,7 @@ const ParkingSlotPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // Fetch user's favorite locations
   const fetchFavorites = async () => {
@@ -364,12 +364,12 @@ const ParkingSlotPage: React.FC = () => {
       });
 
     fetchParkingSlots(false);
-  }, []);
+  }, [fetchParkingSlots]);
 
   // Re-fetch whenever the EV filter toggle changes
   useEffect(() => {
     fetchParkingSlots(evFilter);
-  }, [evFilter]);
+  }, [evFilter, fetchParkingSlots]);
 
   // Fetch favorites separately to ensure it runs when token is available
   useEffect(() => {
