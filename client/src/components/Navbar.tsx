@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import * as Icons from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
 import { useTranslation } from "react-i18next";
+import { useOnboarding } from "../context/OnboardingContext";
 
 const THEME_CLASSES = {
   light: {
@@ -53,10 +54,9 @@ const Navbar: React.FC = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const { theme, toggleTheme } = useTheme();
+  const { launchOnboarding } = useOnboarding();
 
- 
   const { t, i18n } = useTranslation();
-
   // =========================
   // SCROLL EFFECT
   // =========================
@@ -281,6 +281,26 @@ const Navbar: React.FC = () => {
                   `}
                 ></div>
                 <span className="relative z-10">{i18n.language === "es" ? "ES" : "EN"}</span>
+              </button>
+
+              {/* TOUR BUTTON */}
+              <button
+                onClick={launchOnboarding}
+                aria-label="How it works"
+                className={`
+                  flex items-center gap-2
+                  px-4 py-2.5
+                  rounded-2xl
+                  border
+                  font-medium
+                  transition-all duration-300
+                  hover:scale-[1.02]
+                  ${themeClasses.card}
+                  ${themeClasses.text}
+                `}
+              >
+                <Icons.HelpCircle className="w-4 h-4" />
+                <span className="text-sm">Tour</span>
               </button>
 
               {/* THEME TOGGLE */}
@@ -565,6 +585,25 @@ const Navbar: React.FC = () => {
                 }`}
               >
                 {i18n.language === "es" ? "ES" : "EN"}
+              </button>
+
+              {/* TOUR BUTTON MOBILE */}
+              <button
+                onClick={() => {
+                  launchOnboarding();
+                  setIsMobileMenuOpen(false);
+                }}
+                className={`
+                  w-full
+                  flex items-center gap-3
+                  px-4 py-4
+                  rounded-2xl
+                  transition-all duration-300
+                  ${themeClasses.textSecondary} ${themeClasses.hover}
+                `}
+              >
+                <Icons.HelpCircle className="w-5 h-5" />
+                <span>How it works</span>
               </button>
 
               {/* NAV ITEMS */}
