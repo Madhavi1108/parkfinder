@@ -1,14 +1,11 @@
 import express from "express";
-import {
-  enterVehicle,
-  exitVehicle,
-} from "../controllers/parkingLog.controller.js";
-import { authMiddleware, adminMiddleware } from "../middleware/auth.js";
+import { enterVehicle, exitVehicle } from "../controllers/parkingLog.controller.js";
+import { authMiddleware } from "../middleware/auth.js";
+import { adminMiddleware } from "../middleware/auth.js";
 
 const router = express.Router();
 
-// Vehicle entry and exit (requires auth)
-router.post("/:bookingId/enter", authMiddleware, enterVehicle);
-router.post("/:bookingId/exit", authMiddleware, exitVehicle);
+router.post("/entry/:bookingId", authMiddleware, adminMiddleware, enterVehicle);
+router.post("/exit/:bookingId", authMiddleware, adminMiddleware, exitVehicle);
 
 export default router;
