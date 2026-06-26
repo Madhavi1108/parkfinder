@@ -20,11 +20,13 @@ import TermsPage from "./pages/TermsPage";
 import FavoritesPage from "./pages/FavoritesPage";
 import ContactPage from "./pages/ContactPage";
 import SessionTimeout from "./components/SessionTimeout";
+import CookieConsent from "./components/CookieConsent";
 
 function App() {
   return (
     <Router>
       <SessionTimeout />
+      <CookieConsent />
       <Navbar />
       <BackToTop />
       <Routes>
