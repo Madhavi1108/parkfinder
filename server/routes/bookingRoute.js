@@ -37,6 +37,9 @@ router.get("/:id/receipt", authMiddleware, downloadReceipt);
 // Download PDF receipt (user/admin)
 router.get("/:id/receipt", authMiddleware, downloadReceipt);
 
+// Download PDF receipt (user/admin)
+router.get("/:id/receipt", authMiddleware, downloadReceipt);
+
 // ================== ADMIN BOOKINGS ==================
 /**
  * @swagger
