@@ -69,6 +69,9 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   return (
     <div
       id="booking-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
       className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
     >
       <div
@@ -78,12 +81,14 @@ export const BookingModal: React.FC<BookingModalProps> = ({
         <div className={`p-6 border-b ${themeClasses.border}`}>
           <div className="flex items-center justify-between">
             <h2
+              id="modal-title"
               className={`text-2xl font-bold bg-gradient-to-r ${themeClasses.gradient.accent} bg-clip-text text-transparent`}
             >
               Confirm Booking
             </h2>
             <button
               onClick={onClose}
+              aria-label="Close modal"
               disabled={isSubmitting}
               className={`w-8 h-8 rounded-lg ${themeClasses.cardBg} border ${themeClasses.border} flex items-center justify-center ${themeClasses.text} ${themeClasses.hover} transition-colors`}
             >

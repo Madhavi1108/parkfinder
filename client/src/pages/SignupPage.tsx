@@ -408,6 +408,7 @@ export default function SignupPage() {
             {/* Name Field */}
             <div>
               <label
+                htmlFor="name"
                 className={`block text-sm font-medium ${themeClasses.text} mb-2`}
               >
                 Full Name
@@ -417,6 +418,7 @@ export default function SignupPage() {
                   <User className={`w-5 h-5 ${themeClasses.iconColor}`} />
                 </div>
                 <input
+                  id="name"
                   type="text"
                   required
                   className={`w-full pl-12 pr-4 py-3 ${themeClasses.inputBg} border ${
@@ -440,6 +442,7 @@ export default function SignupPage() {
             {/* Email Field */}
             <div>
               <label
+                htmlFor="email"
                 className={`block text-sm font-medium ${themeClasses.text} mb-2`}
               >
                 Email Address
@@ -449,6 +452,7 @@ export default function SignupPage() {
                   <Mail className={`w-5 h-5 ${themeClasses.iconColor}`} />
                 </div>
                 <input
+                  id="email"
                   type="email"
                   required
                   className={`w-full pl-12 pr-4 py-3 ${themeClasses.inputBg} border ${
@@ -474,6 +478,7 @@ export default function SignupPage() {
             {/* Password Field */}
             <div>
               <label
+                htmlFor="password"
                 className={`block text-sm font-medium ${themeClasses.text} mb-2`}
               >
                 Password
@@ -483,6 +488,7 @@ export default function SignupPage() {
                   <Lock className={`w-5 h-5 ${themeClasses.iconColor}`} />
                 </div>
                 <input
+                  id="password"
                   type={showPassword ? "text" : "password"}
                   required
                   className={`w-full pl-12 pr-12 py-3 ${themeClasses.inputBg} border ${
@@ -496,6 +502,7 @@ export default function SignupPage() {
                 />
                 <button
                   type="button"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                   onClick={() => setShowPassword(!showPassword)}
                   className={`absolute right-4 top-1/2 transform -translate-y-1/2 ${themeClasses.textMuted} hover:${themeClasses.text} transition-colors`}
                 >
@@ -542,6 +549,7 @@ export default function SignupPage() {
             {/* Confirm Password Field */}
             <div>
               <label
+                htmlFor="confirmPassword"
                 className={`block text-sm font-medium ${themeClasses.text} mb-2`}
               >
                 Confirm Password
@@ -551,6 +559,7 @@ export default function SignupPage() {
                   <Lock className={`w-5 h-5 ${themeClasses.iconColor}`} />
                 </div>
                 <input
+                  id="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
                   required
                   className={`w-full pl-12 pr-12 py-3 ${themeClasses.inputBg} border ${
@@ -566,6 +575,7 @@ export default function SignupPage() {
                 />
                 <button
                   type="button"
+                  aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className={`absolute right-4 top-1/2 transform -translate-y-1/2 ${themeClasses.textMuted} hover:${themeClasses.text} transition-colors`}
                 >
@@ -590,6 +600,7 @@ export default function SignupPage() {
             {form.role === "admin" && (
               <div>
                 <label
+                  htmlFor="adminSecret"
                   className={`block text-sm font-medium ${themeClasses.text} mb-2`}
                 >
                   Admin Secret Key
@@ -599,6 +610,7 @@ export default function SignupPage() {
                     <Key className="w-5 h-5 text-[#FF2F6C]" />
                   </div>
                   <input
+                    id="adminSecret"
                     type={showAdminSecret ? "text" : "password"}
                     required={form.role === "admin"}
                     className={`w-full pl-12 pr-12 py-3 ${themeClasses.inputBg} border ${
@@ -614,6 +626,7 @@ export default function SignupPage() {
                   />
                   <button
                     type="button"
+                    aria-label={showAdminSecret ? "Hide admin secret key" : "Show admin secret key"}
                     onClick={() => setShowAdminSecret(!showAdminSecret)}
                     className={`absolute right-4 top-1/2 transform -translate-y-1/2 ${themeClasses.textMuted} hover:text-[#FF2F6C] transition-colors`}
                   >
