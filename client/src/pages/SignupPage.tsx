@@ -15,6 +15,7 @@ import {
   Crown,
   UserPlus,
 } from "lucide-react";
+import PasswordStrengthMeter from "../components/PasswordStrengthMeter";
 
 const THEME_CLASSES = {
   light: {
@@ -131,7 +132,6 @@ export default function SignupPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showAdminSecret, setShowAdminSecret] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [passwordStrength, setPasswordStrength] = useState(0);
 
   const navigate = useNavigate();
 
@@ -202,19 +202,8 @@ export default function SignupPage() {
     return isValid;
   };
 
-  const checkPasswordStrength = (password: string) => {
-    let strength = 0;
-    if (password.length >= 8) strength++;
-    if (/[a-z]/.test(password)) strength++;
-    if (/[A-Z]/.test(password)) strength++;
-    if (/\d/.test(password)) strength++;
-    if (/[!@#$%^&*]/.test(password)) strength++;
-    setPasswordStrength(strength);
-  };
-
   const handlePasswordChange = (value: string) => {
     setForm((prev) => ({ ...prev, password: value }));
-    checkPasswordStrength(value);
     if (errors.password) setErrors((prev) => ({ ...prev, password: "" }));
     if (msg) setMsg("");
   };
@@ -278,27 +267,6 @@ export default function SignupPage() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const getPasswordStrengthColor = () => {
-    if (passwordStrength <= 2) return "bg-red-500";
-    if (passwordStrength === 3) return "bg-yellow-500";
-    if (passwordStrength >= 4) return "bg-green-500";
-    return "bg-gray-500";
-  };
-
-  const getPasswordStrengthText = () => {
-    if (passwordStrength <= 2) return "Weak";
-    if (passwordStrength === 3) return "Good";
-    if (passwordStrength >= 4) return "Strong";
-    return "Very Weak";
-  };
-
-  const getStrengthTextColor = () => {
-    if (passwordStrength <= 2) return themeClasses.strength.weak;
-    if (passwordStrength === 3) return themeClasses.strength.good;
-    if (passwordStrength >= 4) return themeClasses.strength.strong;
-    return themeClasses.textMuted;
   };
 
   return (
@@ -515,26 +483,7 @@ export default function SignupPage() {
               </div>
 
               {/* Password Strength Meter */}
-              {form.password && (
-                <div className="mt-2">
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className={themeClasses.textMuted}>
-                      Password strength:
-                    </span>
-                    <span className={getStrengthTextColor()}>
-                      {getPasswordStrengthText()}
-                    </span>
-                  </div>
-                  <div
-                    className={`h-2 ${themeClasses.inputBg} rounded-full overflow-hidden`}
-                  >
-                    <div
-                      className={`h-full ${getPasswordStrengthColor()} transition-all duration-300`}
-                      style={{ width: `${(passwordStrength / 5) * 100}%` }}
-                    ></div>
-                  </div>
-                </div>
-              )}
+              <PasswordStrengthMeter password={form.password} />
 
               {errors.password && (
                 <p
